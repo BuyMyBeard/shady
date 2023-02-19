@@ -79,9 +79,9 @@ class ShaderDetails {
 
     _uniforms.clear();
     usesUniform(UniformVec3('iResolution'));
-    usesUniform(UniformFloat('iTime')..withTransform(UniformFloat.secondsPassed));
-    usesUniform(UniformFloat('iTimeDelta')..withTransform(UniformFloat.frameDelta));
-    usesUniform(UniformFloat('iFrameRate')..withTransform(UniformFloat.frameRate));
+    usesUniform(UniformFloat('iTime')..withTransformer(UniformFloat.secondsPassed));
+    usesUniform(UniformFloat('iTimeDelta')..withTransformer(UniformFloat.frameDelta));
+    usesUniform(UniformFloat('iFrameRate')..withTransformer(UniformFloat.frameRate));
     usesUniform(UniformVec4('iMouse'));
     usesTexture(Texture(context, 'iChannel0'));
     usesTexture(Texture(context, 'iChannel1'));

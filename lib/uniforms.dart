@@ -42,7 +42,7 @@ class Uniform<T> {
     _notifier = ValueNotifier(value);
   }
 
-  void withTransform(ShadyValueTransformer<T> transformer) {
+  void withTransformer(ShadyValueTransformer<T> transformer) {
     _transformer = transformer;
   }
 
