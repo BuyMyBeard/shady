@@ -50,7 +50,7 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
       shady.get('assets/shaders/st9.frag'),
     ]);
 
-    _shaders[0].setTexture('iChannel0', 'assets/textures/metal.png');
+    _shaders[0].setTexture('iChannel0', 'assets/textures/cat.png');
 
     setState(() => _shader = _shaders[0]);
   }

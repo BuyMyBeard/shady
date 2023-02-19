@@ -11,7 +11,7 @@ part 'widgets.dart';
 part 'uniforms.dart';
 
 Image? _defaultImage;
-Future<Image> _initializeDefaultImage() async {
+Future<void> _initializeDefaultImage() async {
   final bytes = base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEA'
     'AAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A'
@@ -19,7 +19,7 @@ Future<Image> _initializeDefaultImage() async {
   );
   final decoder = await instantiateImageCodec(bytes);
   final frame = await decoder.getNextFrame();
-  return frame.image;
+  _defaultImage = frame.image;
 }
 
 class ShadyPainter extends CustomPainter {

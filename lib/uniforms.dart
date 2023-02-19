@@ -17,12 +17,7 @@ class Texture {
   }
 
   int apply(FragmentShader shader, int index) {
-    if (_notifier.value != null) {
-      if (notifier.value!.width > 2) {
-        print(notifier.value!.width);
-      }
-      shader.setImageSampler(index, _notifier.value!);
-    }
+    if (_notifier.value != null) shader.setImageSampler(index, _notifier.value!);
     return index + 1;
   }
 
