@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
-import 'package:vector_math/vector_math.dart' hide Colors;
 
 class ShadyPlayground extends StatefulWidget {
   const ShadyPlayground({super.key});

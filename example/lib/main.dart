@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shady/shady.dart';
 import 'package:shady_example/shady_playground.dart';
-import 'package:vector_math/vector_math.dart' hide Colors;
 
 void main() {
   runApp(const MyApp());

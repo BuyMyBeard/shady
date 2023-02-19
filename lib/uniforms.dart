@@ -2,6 +2,24 @@ part of 'shady.dart';
 
 typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
 
+abstract class Texture {
+  late final String key;
+  late final ValueNotifier<Image?> _notifier;
+  ValueNotifier<Image?> get notifier => _notifier;
+
+  int apply(FragmentShader shader, int index) {
+    if (notifier.value != null) shader.setImageSampler(index, notifier.value!);
+    return index + 1;
+  }
+}
+
+class ImageTexture extends Texture {
+  ImageTexture(String key, [ Image? image ]) {
+    this.key = key;
+    _notifier = ValueNotifier(image);
+  }
+}
+
 class Uniform<T> {
   final String key;
   ShadyValueTransformer<T> _transformer = (a, b) => a;
@@ -20,12 +38,9 @@ class Uniform<T> {
   }
 
   void update(Duration ts) {
-    T newValue = _transformer(
-      notifier.value,
-      ts - (_lastTs ?? ts),
-    );
-
+    T newValue = _transformer(notifier.value, ts - (_lastTs ?? ts));
     _lastTs = ts;
+
     _notifier.value = newValue;
   }
 

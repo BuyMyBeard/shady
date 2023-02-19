@@ -5,6 +5,9 @@ uniform float iTimeDelta;
 uniform float iFrameRate;
 uniform vec4 iMouse;
 out vec4 fragColor;
+uniform sampler2D iChannel0;
+uniform sampler2D iChannel1;
+uniform sampler2D iChannel2;
 //////////////// Shadertoy BEGIN
 
 // Credit: klk @ shadertoy
