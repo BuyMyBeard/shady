@@ -20,30 +20,32 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
   }
 
   Future<void> loadShaders() async {
-    final ratio = WidgetsBinding.instance.window.devicePixelRatio;
-    final size = WidgetsBinding.instance.window.physicalSize / ratio;
-    final vec2Size = Vector2(size.width, size.height);
-
-    final shaderDetails = [
-      ShaderDetails('assets/shaders/test1.frag')
-        ..addUniform(UniformFloat('time')..setTransform(UniformFloat.secondsPassed))
-        ..addUniform(UniformVec2('size', vec2Size)),
-      ShaderDetails('assets/shaders/test2.frag')
-        ..addUniform(UniformFloat('time')..setTransform(UniformFloat.secondsPassed))
-        ..addUniform(UniformVec2('size', vec2Size)),
-      ShaderDetails('assets/shaders/test3.frag')
-        ..addUniform(UniformFloat('time')..setTransform(UniformFloat.secondsPassed))
-        ..addUniform(UniformVec2('size', vec2Size)),
-    ];
-
-    final shady = Shady(shaderDetails);
+    final shady = Shady([
+      ShaderDetails('assets/shaders/st0.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st1.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st2.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st3.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st4.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st5.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st6.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st7.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st8.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/st9.frag')..usesShaderToyUniforms(),
+    ]);
 
     await shady.load();
 
     _shaders.addAll([
-      shady.get('assets/shaders/test1.frag'),
-      shady.get('assets/shaders/test2.frag'),
-      shady.get('assets/shaders/test3.frag'),
+      shady.get('assets/shaders/st0.frag'),
+      shady.get('assets/shaders/st1.frag'),
+      shady.get('assets/shaders/st2.frag'),
+      shady.get('assets/shaders/st3.frag'),
+      shady.get('assets/shaders/st4.frag'),
+      shady.get('assets/shaders/st5.frag'),
+      shady.get('assets/shaders/st6.frag'),
+      shady.get('assets/shaders/st7.frag'),
+      shady.get('assets/shaders/st8.frag'),
+      shady.get('assets/shaders/st9.frag'),
     ]);
 
     setState(() => _shader = _shaders[0]);
@@ -62,7 +64,7 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
       child: Builder(
         builder: (context) {
           if (_shader == null) {
-            return const LinearProgressIndicator();
+            return const Center(child: LinearProgressIndicator());
           }
 
           return Stack(

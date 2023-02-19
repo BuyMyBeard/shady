@@ -10,12 +10,19 @@ part 'widgets.dart';
 part 'uniforms.dart';
 
 class ShadyPainter extends CustomPainter {
+  final ShadyShader _shader;
   final Paint _paint;
 
-  ShadyPainter(Shader shader) : _paint = Paint()..shader = shader;
+  ShadyPainter(ShadyShader shader)
+      : _shader = shader,
+        _paint = Paint()..shader = shader.shader;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (_shader.details.shaderToyed) {
+      _shader.setValue<Vector3>('iResolution', Vector3(size.width, size.height, 0));
+    }
+
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
     canvas.drawRect(rect, _paint);
   }
@@ -29,12 +36,26 @@ class ShadyPainter extends CustomPainter {
 class ShaderDetails {
   final String assetKey;
   final _uniforms = <Uniform>[];
+  bool _shaderToyed = false;
+  bool get shaderToyed => _shaderToyed;
   List<Uniform> get uniforms => [..._uniforms];
 
   ShaderDetails(this.assetKey);
 
-  void addUniform(Uniform uniform) {
+  void usesUniform(Uniform uniform) {
     _uniforms.add(uniform);
+  }
+
+  void usesShaderToyUniforms() {
+    assert(_uniforms.isEmpty, "Shader toy uniforms must be set before other uniforms.");
+
+    _uniforms.clear();
+    usesUniform(UniformVec3('iResolution'));
+    usesUniform(UniformFloat('iTime')..withTransform(UniformFloat.secondsPassed));
+    usesUniform(UniformFloat('iTimeDelta')..withTransform(UniformFloat.frameDelta));
+    usesUniform(UniformFloat('iFrameRate')..withTransform(UniformFloat.frameRate));
+    usesUniform(UniformVec4('iMouse'));
+    _shaderToyed = true;
   }
 }
 
@@ -50,7 +71,6 @@ class ShadyShader {
   ShadyShader(this.details, this.program) {
     shader = program.fragmentShader();
     paint = Paint()..shader = shader;
-    painter = ShadyPainter(shader);
 
     var index = 0;
     for (final uniform in details.uniforms) {
@@ -62,6 +82,8 @@ class ShadyShader {
         index = uniform.apply(shader, startIndex);
       });
     }
+
+    painter = ShadyPainter(this);
   }
 
   void setValue<T>(String uniformKey, T value) {

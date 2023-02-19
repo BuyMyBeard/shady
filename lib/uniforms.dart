@@ -15,7 +15,7 @@ class Uniform<T> {
     _notifier = ValueNotifier(value);
   }
 
-  void setTransform(ShadyValueTransformer<T> transformer) {
+  void withTransform(ShadyValueTransformer<T> transformer) {
     _transformer = transformer;
   }
 
@@ -50,6 +50,14 @@ class UniformFloat extends Uniform<double> {
 
   static double secondsPassed(double prev, Duration delta) {
     return prev += (delta.inMilliseconds / 1000);
+  }
+
+  static double frameDelta(double prev, Duration delta) {
+    return (delta.inMilliseconds / 1000);
+  }
+
+  static double frameRate(double prev, Duration delta) {
+    return (delta.inMilliseconds / 1000) / 1;
   }
 }
 
