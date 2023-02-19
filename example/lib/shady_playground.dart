@@ -12,6 +12,7 @@ class ShadyPlayground extends StatefulWidget {
 class _ShadyPlaygroundState extends State<ShadyPlayground> {
   final List<ShadyShader> _shaders = [];
   ShadyShader? _shader;
+  var _zoomOut = 0;
 
   @override
   initState() {
@@ -59,46 +60,52 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
 
   @override
   Widget build(BuildContext context) {
+    if (_shader == null) {
+      return const Center(child: LinearProgressIndicator());
+    }
+
+    Widget canvas = ShadyCanvas(shader: _shader!);
+    if (_zoomOut == 1) {
+      canvas = Center(child: SizedBox(height: 460, width: 340, child: canvas));
+    } else if (_zoomOut == 2) {
+      canvas = Center(child: SizedBox(height: 160, width: 240, child: canvas));
+    }
+
     return ColoredBox(
       color: Colors.black,
-      child: Builder(
-        builder: (context) {
-          if (_shader == null) {
-            return const Center(child: LinearProgressIndicator());
-          }
-
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: ShadyCanvas(shader: _shader!),
-              ),
-              Positioned(
-                bottom: 40,
-                right: 40,
-                child: FilledButton.icon(
-                    label: const Text(
-                      'N E X T',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w200,
-                      ),
-                    ),
-                    onPressed: _nextShader,
-                    style: const ButtonStyle(
-                      side: MaterialStatePropertyAll(BorderSide(color: Colors.white54)),
-                      padding: MaterialStatePropertyAll(EdgeInsets.all(20)),
-                      backgroundColor: MaterialStatePropertyAll(Colors.black45),
-                      foregroundColor: MaterialStatePropertyAll(Colors.black45),
-                    ),
-                    icon: const Icon(
-                      Icons.arrow_right_alt_sharp,
-                      color: Colors.white,
-                    ),
-                  ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              child: canvas,
+              onTap: () => setState(() => _zoomOut = ((_zoomOut < 2) ? _zoomOut + 1 : 0)),
+            ),
+          ),
+          Positioned(
+            bottom: 40,
+            right: 40,
+            child: FilledButton.icon(
+              label: const Text(
+                'N E X T',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w200,
                 ),
-            ],
-          );
-        },
+              ),
+              onPressed: _nextShader,
+              style: const ButtonStyle(
+                side: MaterialStatePropertyAll(BorderSide(color: Colors.white54)),
+                padding: MaterialStatePropertyAll(EdgeInsets.all(10)),
+                backgroundColor: MaterialStatePropertyAll(Colors.black45),
+                foregroundColor: MaterialStatePropertyAll(Colors.black45),
+              ),
+              icon: const Icon(
+                Icons.arrow_right_alt_sharp,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
