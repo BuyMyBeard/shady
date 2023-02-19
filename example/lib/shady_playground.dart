@@ -21,21 +21,23 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
 
   Future<void> loadShaders() async {
     final shady = Shady([
-      ShaderDetails('assets/shaders/st0.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st1.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st2.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st3.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st4.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st5.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st6.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st7.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st8.frag')..usesShaderToyUniforms(),
-      ShaderDetails('assets/shaders/st9.frag')..usesShaderToyUniforms(),
+      ShaderDetails('assets/shaders/img0.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st0.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st1.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st2.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st3.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st4.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st5.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st6.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st7.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st8.frag')..usesShaderToyUniforms(context),
+      ShaderDetails('assets/shaders/st9.frag')..usesShaderToyUniforms(context),
     ]);
 
     await shady.load();
 
     _shaders.addAll([
+      shady.get('assets/shaders/img0.frag'),
       shady.get('assets/shaders/st0.frag'),
       shady.get('assets/shaders/st1.frag'),
       shady.get('assets/shaders/st2.frag'),
@@ -47,6 +49,8 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
       shady.get('assets/shaders/st8.frag'),
       shady.get('assets/shaders/st9.frag'),
     ]);
+
+    _shaders[0].setTexture('iChannel0', 'assets/textures/metal.png');
 
     setState(() => _shader = _shaders[0]);
   }

@@ -2,21 +2,35 @@ part of 'shady.dart';
 
 typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
 
-abstract class Texture {
+class Texture {
   late final String key;
   late final ValueNotifier<Image?> _notifier;
+  late final AssetBundle _bundle;
   ValueNotifier<Image?> get notifier => _notifier;
 
+  Texture(BuildContext context, this.key, [String? assetKey]) {
+    _bundle = DefaultAssetBundle.of(context);
+    _notifier = ValueNotifier(null);
+    if (assetKey != null) {
+      load(assetKey);
+    }
+  }
+
   int apply(FragmentShader shader, int index) {
-    if (notifier.value != null) shader.setImageSampler(index, notifier.value!);
+    if (_notifier.value != null) {
+      if (notifier.value!.width > 2) {
+        print(notifier.value!.width);
+      }
+      shader.setImageSampler(index, _notifier.value!);
+    }
     return index + 1;
   }
-}
 
-class ImageTexture extends Texture {
-  ImageTexture(String key, [ Image? image ]) {
-    this.key = key;
-    _notifier = ValueNotifier(image);
+  Future<void> load(String assetKey) async {
+    final buffer = await _bundle.loadBuffer(assetKey);
+    final codec = await instantiateImageCodecFromBuffer(buffer);
+    final frame = await codec.getNextFrame();
+    _notifier.value = frame.image;
   }
 }
 

@@ -18,6 +18,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   shaders:
+    - "assets/shaders/img0.frag"
     - "assets/shaders/st0.frag"
     - "assets/shaders/st1.frag"
     - "assets/shaders/st2.frag"
@@ -28,3 +29,5 @@ flutter:
     - "assets/shaders/st7.frag"
     - "assets/shaders/st8.frag"
     - "assets/shaders/st9.frag"
+  assets:
+    - "assets/textures/"

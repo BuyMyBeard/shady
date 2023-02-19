@@ -1,7 +1,7 @@
 library shady;
 
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart' hide Image;
@@ -10,16 +10,16 @@ import 'package:vector_math/vector_math.dart';
 part 'widgets.dart';
 part 'uniforms.dart';
 
-Image? _miniImage;
-final miniImageBytes = Uint8List.fromList([
-  137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,4,0,
-  0,0,181,28,12,2,0,0,0,11,73,68,65,84,120,218,99,100,248,15,0,1,5,1,1,
-  39,24,227,102,0,0,0,0,73,69,78,68,174,66,96,130
-]);
-Future<void> _initializeMiniImage() async {
-    final decoder = await instantiateImageCodec(miniImageBytes);
-    final frame = await decoder.getNextFrame();
-    _miniImage = frame.image;
+Image? _defaultImage;
+Future<Image> _initializeDefaultImage() async {
+  final bytes = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEA'
+    'AAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A'
+    '8AAQUBAScY42YAAAAASUVORK5CYII=',
+  );
+  final decoder = await instantiateImageCodec(bytes);
+  final frame = await decoder.getNextFrame();
+  return frame.image;
 }
 
 class ShadyPainter extends CustomPainter {
@@ -33,7 +33,10 @@ class ShadyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (_shader.details.shaderToyed) {
-      _shader.setUniform<Vector3>('iResolution', Vector3(size.width, size.height, 0));
+      _shader.setUniform<Vector3>(
+        'iResolution',
+        Vector3(size.width, size.height, 0),
+      );
     }
 
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
@@ -68,8 +71,11 @@ class ShaderDetails {
     _uniforms.add(uniform);
   }
 
-  void usesShaderToyUniforms() {
-    assert(_uniforms.isEmpty, "Shader toy uniforms must be set before other uniforms.");
+  void usesShaderToyUniforms(BuildContext context) {
+    assert(
+      _uniforms.isEmpty,
+      "Shader toy uniforms must be set before other uniforms.",
+    );
 
     _uniforms.clear();
     usesUniform(UniformVec3('iResolution'));
@@ -77,9 +83,9 @@ class ShaderDetails {
     usesUniform(UniformFloat('iTimeDelta')..withTransform(UniformFloat.frameDelta));
     usesUniform(UniformFloat('iFrameRate')..withTransform(UniformFloat.frameRate));
     usesUniform(UniformVec4('iMouse'));
-    usesTexture(ImageTexture('iChannel0'));
-    usesTexture(ImageTexture('iChannel1'));
-    usesTexture(ImageTexture('iChannel2'));
+    usesTexture(Texture(context, 'iChannel0'));
+    usesTexture(Texture(context, 'iChannel1'));
+    usesTexture(Texture(context, 'iChannel2'));
     _shaderToyed = true;
   }
 }
@@ -103,32 +109,28 @@ class ShadyShader {
 
       var startIndex = index;
       index = uniform.apply(shader, index);
-      uniform.notifier.addListener(() {
-        index = uniform.apply(shader, startIndex);
-      });
+      uniform.notifier.addListener(() => uniform.apply(shader, startIndex));
     }
 
     index = 0;
     for (final texture in details.textures) {
+      var scopeIndex = index;
+
+      texture.notifier.value = _defaultImage;
       _textureKeyMap[texture.key] = texture;
 
-      var startIndex = index;
-      texture.notifier.value ??= _miniImage!;
-
-      index = texture.apply(shader, index);
-      texture.notifier.addListener(() {
-        index = texture.apply(shader, startIndex);
-      });
+      index = texture.apply(shader, scopeIndex);
+      texture.notifier.addListener(() => texture.apply(shader, scopeIndex));
     }
 
     paint = Paint()..shader = shader;
     painter = ShadyPainter(this);
   }
 
-  void setImage(String textureKey, Image image) {
+  void setTexture(String textureKey, String assetKey) {
     try {
       final texture = _textureKeyMap[textureKey];
-      texture!.notifier.value = image;
+      texture!.load(assetKey);
     } catch (e) {
       throw Exception('Texture with key "$textureKey" not found.');
     }
@@ -166,7 +168,6 @@ class Shady {
   final List<ShaderDetails> details;
   final _shaders = <String, ShadyShader>{};
   final _uniforms = <Uniform>[];
-  Image? miniImage;
 
   var _ready = false;
   bool get ready => _ready;
@@ -178,7 +179,7 @@ class Shady {
       return;
     }
 
-    await _initializeMiniImage();
+    await _initializeDefaultImage();
 
     for (final detail in details) {
       final program = await FragmentProgram.fromAsset(detail.assetKey);
