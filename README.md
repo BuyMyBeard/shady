@@ -1,4 +1,4 @@
-An attempt at making it easier to play around with custom GLSL shaders in Flutter.
+An attempt at making it easier to play around with custom GLSL shaders in Flutter. Consider WIP and unstable until minor is bumped.
 
 ## Getting started
 
