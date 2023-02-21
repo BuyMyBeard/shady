@@ -3,15 +3,13 @@ import 'package:flutter/widgets.dart';
 import 'package:shady/controllers.dart';
 
 class ShadyCanvas extends StatefulWidget {
-  final Widget? _child;
   final ShaderController shader;
 
   const ShadyCanvas({
     required this.shader,
     Key? key,
     Widget? child,
-  })  : _child = child,
-        super(key: key);
+  }) : super(key: key);
 
   @override
   State<ShadyCanvas> createState() => _ShadyCanvasState();
@@ -19,11 +17,11 @@ class ShadyCanvas extends StatefulWidget {
 
 class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
-  final ValueNotifier _notifier = ValueNotifier(false);
+  final ValueNotifier _notifier = ValueNotifier(0);
 
   @override
   void initState() {
-    _ticker = createTicker((_) => _notifier.value = !_notifier.value);
+    _ticker = createTicker((_) => _notifier.value += 1);
     _ticker.start();
     super.initState();
   }
@@ -37,23 +35,37 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _notifier,
+      builder: (context, child) {
+        return CustomPaint(
+          key: Key(_notifier.value.toString()),
+          willChange: true,
+          painter: widget.shader.painter,
+        );
+      },
+    );
+  }
+}
+
+class ShadyStack extends StatelessWidget {
+  final Widget? child;
+  final ShaderController shader;
+
+  const ShadyStack({
+    required this.shader,
+    Key? key,
+    this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
-          child: AnimatedBuilder(
-            animation: _notifier,
-            child: widget._child,
-            builder: (context, child) {
-              return CustomPaint(
-                key: Key(_notifier.value.toString()),
-                willChange: true,
-                painter: widget.shader.painter,
-                child: child,
-              );
-            },
-          ),
+          child: ShadyCanvas(shader: shader),
         ),
-        if (widget._child != null) widget._child!,
+        if (child != null) child!,
       ],
     );
   }

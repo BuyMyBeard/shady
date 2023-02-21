@@ -30,7 +30,7 @@ class TextureInstance {
   }
 }
 
-class UniformInstance<T> {
+abstract class UniformInstance<T> {
   late final String key;
   late final ValueNotifier<T> notifier;
   ShadyValueTransformer<T> transformer = (a, b) => a;
@@ -56,10 +56,8 @@ class UniformInstance<T> {
     transformer = transformer;
   }
 
-  int apply(FragmentShader shader, int index) {
-    shader.setFloat(index, 0);
-    return index + 1;
-  }
+
+  int apply(FragmentShader shader, int index);
 }
 
 class UniformFloatInstance extends UniformInstance<double> {

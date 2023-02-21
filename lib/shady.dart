@@ -69,7 +69,8 @@ class Shady {
 
   void _ensureUpdating() {
     if (!_updating) {
-      _tick = 60;
+      _updating = true;
+      _tick = 30;
       SchedulerBinding.instance.addPostFrameCallback(_update);
     }
   }
@@ -77,17 +78,22 @@ class Shady {
   void _update(Duration ts) {
     if (!_ready) return;
 
-    _updating = true;
-
+    _traversed.clear();
     for (var ref in _controllerRefs) {
-      if (ref.target != null && _traversed.contains(ref.target!.key)) {
-        _traversed.add(ref.target!.key);
+      if (ref.target != null && !_traversed.contains(ref.target!.key)) {
         ref.target?.update(ts);
+        _traversed.add(ref.target!.key);
       }
     }
 
-    if (_tick-- < 30) {
+    if (_tick-- < 0) {
       _controllerRefs.removeWhere((x) => x.target == null);
+      _tick = 30;
+
+      if (_controllerRefs.isEmpty) {
+        _updating = false;
+        return;
+      }
     }
 
     SchedulerBinding.instance.addPostFrameCallback(_update);

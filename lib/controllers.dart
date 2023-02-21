@@ -1,15 +1,18 @@
 import 'package:flutter/widgets.dart' hide Image;
 import 'package:shady/internal/shader.dart';
-import 'package:shady/internal/uniforms.dart';
 import 'package:shady/shady.dart';
 
 class ShaderController {
-  ShaderInstance _instance;
+  final ShaderInstance _instance;
 
   ShaderController(ShaderInstance instance) : _instance = instance;
 
   String get key => _instance.key;
   CustomPainter get painter => _instance.painter;
+
+  void update(Duration ts) {
+    _instance.update(ts);
+  }
 
   void setTexture(String textureKey, String asset) {
     _instance.setTexture(textureKey, asset);

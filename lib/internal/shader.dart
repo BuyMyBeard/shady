@@ -24,26 +24,31 @@ class ShaderInstance {
     shaderToyed = description.shaderToy;
 
     if (shaderToyed) {
-      description.uniforms.add(ShadyUniformVec3(key: 'iResolution'));
-      description.uniforms.add(ShadyUniformFloat(key: 'iTime', transformer: ShadyUniformFloat.secondsPassed));
-      description.uniforms.add(ShadyUniformFloat(key: 'iTimeDelta', transformer: ShadyUniformFloat.frameDelta));
-      description.uniforms.add(ShadyUniformFloat(key: 'iFrameRate', transformer: ShadyUniformFloat.frameRate));
-      description.uniforms.add(ShadyUniformVec4(key: 'iMouse'));
-      description.textures.add(ShadyTexture(key: 'iChannel0'));
-      description.textures.add(ShadyTexture(key: 'iChannel1'));
-      description.textures.add(ShadyTexture(key: 'iChannel2'));
+      description.uniforms.addAll([
+        ShadyUniformVec3(key: 'iResolution'),
+        ShadyUniformFloat(key: 'iTime', transformer: ShadyUniformFloat.secondsPassed),
+        ShadyUniformFloat(key: 'iTimeDelta', transformer: ShadyUniformFloat.frameDelta),
+        ShadyUniformFloat(key: 'iFrameRate', transformer: ShadyUniformFloat.frameRate),
+        ShadyUniformVec4(key: 'iMouse'),
+      ]);
+
+      description.textures.addAll([
+        ShadyTexture(key: 'iChannel0'),
+        ShadyTexture(key: 'iChannel1'),
+        ShadyTexture(key: 'iChannel2')
+      ]);
     }
 
     var index = 0;
     for (final uniformDescription in description.uniforms) {
       if (uniformDescription is ShadyUniform<double>) {
-        uniformKeyMap[uniformDescription.key] = UniformInstance<double>(uniformDescription);
+        uniformKeyMap[uniformDescription.key] = UniformFloatInstance(uniformDescription);
       } else if (uniformDescription is ShadyUniform<Vector2>) {
-        uniformKeyMap[uniformDescription.key] = UniformInstance<Vector2>(uniformDescription);
+        uniformKeyMap[uniformDescription.key] = UniformVec2Instance(uniformDescription);
       } else if (uniformDescription is ShadyUniform<Vector3>) {
-        uniformKeyMap[uniformDescription.key] = UniformInstance<Vector3>(uniformDescription);
+        uniformKeyMap[uniformDescription.key] = UniformVec3Instance(uniformDescription);
       } else if (uniformDescription is ShadyUniform<Vector4>) {
-        uniformKeyMap[uniformDescription.key] = UniformInstance<Vector4>(uniformDescription);
+        uniformKeyMap[uniformDescription.key] = UniformVec4Instance(uniformDescription);
       } else {
         throw Exception("Unsupported uniform type");
       }
