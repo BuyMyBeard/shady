@@ -1,18 +1,19 @@
-part of 'shady.dart';
+import 'dart:ui';
+import 'package:flutter/widgets.dart' hide Image;
+import 'package:shady/shady.dart';
+import 'package:vector_math/vector_math.dart';
 
-typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
-
-class Texture {
+class TextureInstance {
   late final String key;
   late final ValueNotifier<Image?> _notifier;
   late final AssetBundle _bundle;
   ValueNotifier<Image?> get notifier => _notifier;
 
-  Texture(BuildContext context, this.key, [String? assetKey]) {
-    _bundle = DefaultAssetBundle.of(context);
-    _notifier = ValueNotifier(null);
-    if (assetKey != null) {
-      load(assetKey);
+  TextureInstance(AssetBundle bundle, ShadyTexture description, Image defaultImage) : _bundle = bundle {
+    key = description.key;
+    _notifier = ValueNotifier(defaultImage);
+    if (description.asset != null) {
+      load(description.asset!);
     }
   }
 
@@ -29,32 +30,30 @@ class Texture {
   }
 }
 
-class Uniform<T> {
-  final String key;
-  ShadyValueTransformer<T> _transformer = (a, b) => a;
-
-  late final ValueNotifier<T> _notifier;
-  ValueNotifier<T> get notifier => _notifier;
+class UniformInstance<T> {
+  late final String key;
+  late final ValueNotifier<T> notifier;
+  ShadyValueTransformer<T> transformer = (a, b) => a;
 
   Duration? _lastTs;
 
-  Uniform(this.key, T value) {
-    _notifier = ValueNotifier(value);
-  }
-
-  void withTransformer(ShadyValueTransformer<T> transformer) {
-    _transformer = transformer;
-  }
+  UniformInstance(ShadyUniform<T> description)
+      : key = description.key,
+        notifier = ValueNotifier<T>(description.initialValue),
+        transformer = description.transformer;
 
   void update(Duration ts) {
-    T newValue = _transformer(notifier.value, ts - (_lastTs ?? ts));
+    T newValue = transformer(notifier.value, ts - (_lastTs ?? ts));
     _lastTs = ts;
-
-    _notifier.value = newValue;
+    notifier.value = newValue;
   }
 
   void set(T value) {
-    _notifier.value = value;
+    notifier.value = value;
+  }
+
+  void setTransformer(ShadyValueTransformer<T> transformer) {
+    transformer = transformer;
   }
 
   int apply(FragmentShader shader, int index) {
@@ -63,30 +62,18 @@ class Uniform<T> {
   }
 }
 
-class UniformFloat extends Uniform<double> {
-  UniformFloat(String key, [double value = 0]) : super(key, value);
+class UniformFloatInstance extends UniformInstance<double> {
+  UniformFloatInstance(ShadyUniform<double> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
     shader.setFloat(index, notifier.value);
     return index + 1;
   }
-
-  static double secondsPassed(double prev, Duration delta) {
-    return prev += (delta.inMilliseconds / 1000);
-  }
-
-  static double frameDelta(double prev, Duration delta) {
-    return (delta.inMilliseconds / 1000);
-  }
-
-  static double frameRate(double prev, Duration delta) {
-    return (delta.inMilliseconds / 1000) / 1;
-  }
 }
 
-class UniformVec2 extends Uniform<Vector2> {
-  UniformVec2(String key, [Vector2? value]) : super(key, value ?? Vector2.zero());
+class UniformVec2Instance extends UniformInstance<Vector2> {
+  UniformVec2Instance(ShadyUniform<Vector2> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
@@ -96,8 +83,8 @@ class UniformVec2 extends Uniform<Vector2> {
   }
 }
 
-class UniformVec3 extends Uniform<Vector3> {
-  UniformVec3(String key, [Vector3? value]) : super(key, value ?? Vector3.zero());
+class UniformVec3Instance extends UniformInstance<Vector3> {
+  UniformVec3Instance(ShadyUniform<Vector3> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
@@ -108,8 +95,8 @@ class UniformVec3 extends Uniform<Vector3> {
   }
 }
 
-class UniformVec4 extends Uniform<Vector4> {
-  UniformVec4(String key, [Vector4? value]) : super(key, value ?? Vector4.zero());
+class UniformVec4Instance extends UniformInstance<Vector4> {
+  UniformVec4Instance(ShadyUniform<Vector4> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {

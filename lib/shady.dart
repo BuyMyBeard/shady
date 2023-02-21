@@ -1,200 +1,60 @@
 library shady;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart' hide Image;
-import 'package:vector_math/vector_math.dart';
+import 'package:shady/controllers.dart';
+import 'package:shady/descriptors.dart';
+import 'package:shady/internal/default_image.dart';
+import 'package:shady/internal/shader.dart';
+import 'package:shady/internal/uniforms.dart';
 
-part 'widgets.dart';
-part 'uniforms.dart';
+export 'controllers.dart';
+export 'descriptors.dart';
+export 'widgets.dart';
 
-Image? _defaultImage;
-Future<void> _initializeDefaultImage() async {
-  final bytes = base64Decode(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEA'
-    'AAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A'
-    '8AAQUBAScY42YAAAAASUVORK5CYII=',
-  );
-  final decoder = await instantiateImageCodec(bytes);
-  final frame = await decoder.getNextFrame();
-  _defaultImage = frame.image;
-}
-
-class ShadyPainter extends CustomPainter {
-  final ShadyShader _shader;
-  final Paint _paint;
-
-  ShadyPainter(ShadyShader shader)
-      : _shader = shader,
-        _paint = Paint()..shader = shader.shader;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (_shader.details.shaderToyed) {
-      _shader.setUniform<Vector3>(
-        'iResolution',
-        Vector3(size.width, size.height, 0),
-      );
-    }
-
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    canvas.drawRect(rect, _paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
-}
-
-class ShaderDetails {
-  final String assetKey;
-
-  final _uniforms = <Uniform>[];
-  List<Uniform> get uniforms => [..._uniforms];
-
-  final _textures = <Texture>[];
-  List<Texture> get textures => [..._textures];
-
-  bool _shaderToyed = false;
-  bool get shaderToyed => _shaderToyed;
-
-  ShaderDetails(this.assetKey);
-
-  void usesTexture(Texture texture) {
-    _textures.add(texture);
-  }
-
-  void usesUniform(Uniform uniform) {
-    _uniforms.add(uniform);
-  }
-
-  void usesShaderToyUniforms(BuildContext context) {
-    assert(
-      _uniforms.isEmpty,
-      "Shader toy uniforms must be set before other uniforms.",
-    );
-
-    _uniforms.clear();
-    usesUniform(UniformVec3('iResolution'));
-    usesUniform(UniformFloat('iTime')..withTransformer(UniformFloat.secondsPassed));
-    usesUniform(UniformFloat('iTimeDelta')..withTransformer(UniformFloat.frameDelta));
-    usesUniform(UniformFloat('iFrameRate')..withTransformer(UniformFloat.frameRate));
-    usesUniform(UniformVec4('iMouse'));
-    usesTexture(Texture(context, 'iChannel0'));
-    usesTexture(Texture(context, 'iChannel1'));
-    usesTexture(Texture(context, 'iChannel2'));
-    _shaderToyed = true;
-  }
-}
-
-class ShadyShader {
-  final ShaderDetails details;
-  final FragmentProgram program;
-  late final FragmentShader shader;
-  late final Paint paint;
-  late final CustomPainter painter;
-
-  final Map<String, Uniform> _uniformKeyMap = {};
-  final Map<String, Texture> _textureKeyMap = {};
-
-  ShadyShader(this.details, this.program) {
-    shader = program.fragmentShader();
-
-    var index = 0;
-    for (final uniform in details.uniforms) {
-      _uniformKeyMap[uniform.key] = uniform;
-
-      var startIndex = index;
-      index = uniform.apply(shader, index);
-      uniform.notifier.addListener(() => uniform.apply(shader, startIndex));
-    }
-
-    index = 0;
-    for (final texture in details.textures) {
-      var scopeIndex = index;
-
-      texture.notifier.value = _defaultImage;
-      _textureKeyMap[texture.key] = texture;
-
-      index = texture.apply(shader, scopeIndex);
-      texture.notifier.addListener(() => texture.apply(shader, scopeIndex));
-    }
-
-    paint = Paint()..shader = shader;
-    painter = ShadyPainter(this);
-  }
-
-  void setTexture(String textureKey, String assetKey) {
-    try {
-      final texture = _textureKeyMap[textureKey];
-      texture!.load(assetKey);
-    } catch (e) {
-      throw Exception('Texture with key "$textureKey" not found.');
-    }
-  }
-
-  Image? getImage(String textureKey) {
-    try {
-      final texture = _textureKeyMap[textureKey];
-      return texture!.notifier.value;
-    } catch (e) {
-      throw Exception('Texture with key "$textureKey" not found.');
-    }
-  }
-
-  void setUniform<T>(String uniformKey, T value) {
-    try {
-      final uniform = _uniformKeyMap[uniformKey] as Uniform<T>;
-      uniform.notifier.value = value;
-    } catch (e) {
-      throw Exception('Uniform with key "$uniformKey" and type "$T" not found.');
-    }
-  }
-
-  T getUniform<T>(String uniformKey) {
-    try {
-      final uniform = _uniformKeyMap[uniformKey] as Uniform<T>;
-      return uniform.notifier.value;
-    } catch (e) {
-      throw Exception('Uniform with key "$uniformKey" and type "$T" not found.');
-    }
-  }
-}
+typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
 
 class Shady {
-  final List<ShaderDetails> details;
-  final _shaders = <String, ShadyShader>{};
-  final _uniforms = <Uniform>[];
+  final List<ShadyShader> descriptions;
+  final List<WeakReference<ShaderController>> _controllerRefs = [];
+  final _shaders = <String, ShaderInstance>{};
+  final _uniforms = <UniformInstance>[];
+  final _traversed = <String>{};
 
+  var _tick = 0;
   var _ready = false;
+  var _updating = false;
   bool get ready => _ready;
 
-  Shady(this.details);
+  Shady(this.descriptions);
 
-  Future<void> load() async {
+  Future<void> load(BuildContext context) async {
     if (_ready == true) {
       return;
     }
 
-    await _initializeDefaultImage();
+    final assetBundle = DefaultAssetBundle.of(context);
+    final defaultImage = await getDefaultImage();
 
-    for (final detail in details) {
-      final program = await FragmentProgram.fromAsset(detail.assetKey);
-      final shader = ShadyShader(detail, program);
-      _uniforms.addAll(detail.uniforms);
-      _shaders[detail.assetKey] = shader;
+    for (final shaderDescription in descriptions) {
+      final program = await FragmentProgram.fromAsset(shaderDescription.asset);
+      final shader = ShaderInstance(shaderDescription, program, defaultImage, assetBundle);
+      _uniforms.addAll(shader.uniformKeyMap.values);
+      _shaders[shaderDescription.key] = shader;
     }
 
     _ready = true;
-    SchedulerBinding.instance.addPostFrameCallback(_update);
   }
 
-  ShadyShader get(String shaderAssetKey) {
+  ShaderController get(String shaderAssetKey) {
     try {
-      return _shaders[shaderAssetKey]!;
+      final controller = ShaderController(_shaders[shaderAssetKey]!);
+      _controllerRefs.add(WeakReference(controller));
+      _ensureUpdating();
+
+      return controller;
     } catch (e) {
       throw Exception('Shader with asset key "$shaderAssetKey" not found.');
     }
@@ -202,15 +62,32 @@ class Shady {
 
   void dispose() {
     _ready = false;
+    _controllerRefs.clear();
     _shaders.clear();
     _uniforms.clear();
+  }
+
+  void _ensureUpdating() {
+    if (!_updating) {
+      _tick = 60;
+      SchedulerBinding.instance.addPostFrameCallback(_update);
+    }
   }
 
   void _update(Duration ts) {
     if (!_ready) return;
 
-    for (final uniform in _uniforms) {
-      uniform.update(ts);
+    _updating = true;
+
+    for (var ref in _controllerRefs) {
+      if (ref.target != null && _traversed.contains(ref.target!.key)) {
+        _traversed.add(ref.target!.key);
+        ref.target?.update(ts);
+      }
+    }
+
+    if (_tick-- < 30) {
+      _controllerRefs.removeWhere((x) => x.target == null);
     }
 
     SchedulerBinding.instance.addPostFrameCallback(_update);

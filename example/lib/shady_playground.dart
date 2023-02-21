@@ -9,8 +9,9 @@ class ShadyPlayground extends StatefulWidget {
 }
 
 class _ShadyPlaygroundState extends State<ShadyPlayground> {
-  final List<ShadyShader> _shaders = [];
-  ShadyShader? _shader;
+  final List<String> _shaders = [];
+  Shady? shady;
+  ShaderController? _shader;
   var _zoomOut = 0;
 
   @override
@@ -20,45 +21,33 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
   }
 
   Future<void> loadShaders() async {
-    final shady = Shady([
-      ShaderDetails('assets/shaders/img0.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st0.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st1.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st2.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st3.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st4.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st5.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st6.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st7.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st8.frag')..usesShaderToyUniforms(context),
-      ShaderDetails('assets/shaders/st9.frag')..usesShaderToyUniforms(context),
+    shady = Shady([
+      ShadyShader(asset: 'assets/shaders/img0.frag', key: 'img0', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st0.frag', key: 'st0', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st1.frag', key: 'st1', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st2.frag', key: 'st2', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st3.frag', key: 'st3', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st4.frag', key: 'st4', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st5.frag', key: 'st5', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st6.frag', key: 'st6', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st7.frag', key: 'st7', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st8.frag', key: 'st8', shaderToy: true),
+      ShadyShader(asset: 'assets/shaders/st9.frag', key: 'st9', shaderToy: true),
     ]);
 
-    await shady.load();
+    await shady!.load(context);
 
-    _shaders.addAll([
-      shady.get('assets/shaders/img0.frag'),
-      shady.get('assets/shaders/st0.frag'),
-      shady.get('assets/shaders/st1.frag'),
-      shady.get('assets/shaders/st2.frag'),
-      shady.get('assets/shaders/st3.frag'),
-      shady.get('assets/shaders/st4.frag'),
-      shady.get('assets/shaders/st5.frag'),
-      shady.get('assets/shaders/st6.frag'),
-      shady.get('assets/shaders/st7.frag'),
-      shady.get('assets/shaders/st8.frag'),
-      shady.get('assets/shaders/st9.frag'),
-    ]);
+    _shaders.addAll(['img0','st1','st2','st3','st4','st5','st6','st7','st8','st9']);
 
-    _shaders[0].setTexture('iChannel0', 'assets/textures/cat.png');
+    shady!.get('img0').setTexture('iChannel0', 'assets/textures/cat.png');
 
-    setState(() => _shader = _shaders[0]);
+    setState(() => _shader = shady!.get(_shaders[0]));
   }
 
   void _nextShader() {
-    final currentIdx = _shaders.indexOf(_shader!);
+    final currentIdx = _shaders.indexOf(_shader!.key);
     final nextIdx = (currentIdx < (_shaders.length - 1)) ? (currentIdx + 1) : 0;
-    setState(() => _shader = _shaders[nextIdx]);
+    setState(() => _shader = shady!.get(_shaders[nextIdx]));
   }
 
   @override

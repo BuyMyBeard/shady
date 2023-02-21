@@ -1,15 +1,16 @@
-part of 'shady.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shady/controllers.dart';
 
 class ShadyCanvas extends StatefulWidget {
   final Widget? _child;
-  final ShadyShader _shader;
+  final ShaderController shader;
 
   const ShadyCanvas({
+    required this.shader,
     Key? key,
     Widget? child,
-    required ShadyShader shader,
-  })  : _shader = shader,
-        _child = child,
+  })  : _child = child,
         super(key: key);
 
   @override
@@ -36,17 +37,24 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _notifier,
-      child: widget._child,
-      builder: (context, child) {
-        return CustomPaint(
-          key: Key(_notifier.value.toString()),
-          willChange: true,
-          painter: widget._shader.painter,
-          child: child,
-        );
-      },
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: AnimatedBuilder(
+            animation: _notifier,
+            child: widget._child,
+            builder: (context, child) {
+              return CustomPaint(
+                key: Key(_notifier.value.toString()),
+                willChange: true,
+                painter: widget.shader.painter,
+                child: child,
+              );
+            },
+          ),
+        ),
+        if (widget._child != null) widget._child!,
+      ],
     );
   }
 }
