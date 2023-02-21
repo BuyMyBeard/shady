@@ -22,7 +22,7 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
 
   Future<void> loadShaders() async {
     shady = Shady([
-      ShadyShader(asset: 'assets/shaders/img0.frag', key: 'img0', shaderToy: true),
+      // ShaderToy shaders
       ShadyShader(asset: 'assets/shaders/st0.frag', key: 'st0', shaderToy: true),
       ShadyShader(asset: 'assets/shaders/st1.frag', key: 'st1', shaderToy: true),
       ShadyShader(asset: 'assets/shaders/st2.frag', key: 'st2', shaderToy: true),
@@ -33,14 +33,32 @@ class _ShadyPlaygroundState extends State<ShadyPlayground> {
       ShadyShader(asset: 'assets/shaders/st7.frag', key: 'st7', shaderToy: true),
       ShadyShader(asset: 'assets/shaders/st8.frag', key: 'st8', shaderToy: true),
       ShadyShader(asset: 'assets/shaders/st9.frag', key: 'st9', shaderToy: true),
+
+      // Image shaders
+      ShadyShader(
+        key: 'img0',
+        asset: 'assets/shaders/img0.frag',
+        uniforms: [
+          ShadyUniformFloat(
+            key: 'time',
+            transformer: ShadyUniformFloat.secondsPassed,
+          ),
+          ShadyUniformVec3(
+            key: 'resolution',
+            transformer: ShadyUniformVec3.resolution,
+          ),
+        ],
+        textures: [
+          ShadyTexture(
+            key: 'cat',
+            asset: 'assets/textures/cat.png',
+          ),
+        ],
+      ),
     ]);
 
     await shady!.load(context);
-
-    _shaders.addAll(['img0','st1','st2','st3','st4','st5','st6','st7','st8','st9']);
-
-    shady!.get('img0').setTexture('iChannel0', 'assets/textures/cat.png');
-
+    _shaders.addAll(['st2', 'st4', 'st3', 'st5', 'st6', 'st1', 'st7', 'st8', 'st9', 'img0']);
     setState(() => _shader = shady!.get(_shaders[0]));
   }
 

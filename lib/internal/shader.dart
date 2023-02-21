@@ -7,6 +7,7 @@ import 'package:shady/internal/uniforms.dart';
 import 'package:shady/shady.dart';
 import 'package:vector_math/vector_math.dart';
 
+@protected
 class ShaderInstance {
   final FragmentProgram program;
   late final String key;
@@ -25,7 +26,7 @@ class ShaderInstance {
 
     if (shaderToyed) {
       description.uniforms.addAll([
-        ShadyUniformVec3(key: 'iResolution'),
+        ShadyUniformVec3(key: 'iResolution', transformer: ShadyUniformVec3.resolution),
         ShadyUniformFloat(key: 'iTime', transformer: ShadyUniformFloat.secondsPassed),
         ShadyUniformFloat(key: 'iTimeDelta', transformer: ShadyUniformFloat.frameDelta),
         ShadyUniformFloat(key: 'iFrameRate', transformer: ShadyUniformFloat.frameRate),

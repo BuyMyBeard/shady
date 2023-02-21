@@ -1,7 +1,6 @@
 import 'package:shady/shady.dart';
 import 'package:vector_math/vector_math.dart';
 
-
 class ShadyShader {
   final String asset;
   final String key;
@@ -15,7 +14,8 @@ class ShadyShader {
     List<ShadyUniform>? uniforms,
     List<ShadyTexture>? textures,
     this.shaderToy = false,
-  }) : uniforms = uniforms ?? [], textures = textures ?? [];
+  })  : uniforms = uniforms ?? [],
+        textures = textures ?? [];
 }
 
 class ShadyTexture {
@@ -37,7 +37,7 @@ class ShadyUniform<T> {
     required this.key,
     required this.initialValue,
     ShadyValueTransformer<T>? transformer,
-  }) : transformer = transformer ?? ((a,b) => a);
+  }) : transformer = transformer ?? ((a, b) => a);
 }
 
 class ShadyUniformFloat extends ShadyUniform<double> {
@@ -74,6 +74,8 @@ class ShadyUniformVec3 extends ShadyUniform<Vector3> {
     super.transformer,
     Vector3? initialValue,
   }) : super(initialValue: initialValue ?? Vector3.zero());
+
+  static Vector3 resolution(Vector3 prev, Duration delta) => prev;
 }
 
 class ShadyUniformVec4 extends ShadyUniform<Vector4> {

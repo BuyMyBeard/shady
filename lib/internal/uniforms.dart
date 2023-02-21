@@ -9,7 +9,8 @@ class TextureInstance {
   late final AssetBundle _bundle;
   ValueNotifier<Image?> get notifier => _notifier;
 
-  TextureInstance(AssetBundle bundle, ShadyTexture description, Image defaultImage) : _bundle = bundle {
+  TextureInstance(AssetBundle bundle, ShadyTexture description, Image defaultImage)
+      : _bundle = bundle {
     key = description.key;
     _notifier = ValueNotifier(defaultImage);
     if (description.asset != null) {
@@ -56,7 +57,6 @@ abstract class UniformInstance<T> {
     transformer = transformer;
   }
 
-
   int apply(FragmentShader shader, int index);
 }
 
@@ -82,7 +82,10 @@ class UniformVec2Instance extends UniformInstance<Vector2> {
 }
 
 class UniformVec3Instance extends UniformInstance<Vector3> {
-  UniformVec3Instance(ShadyUniform<Vector3> description) : super(description);
+  final bool isResolution;
+  UniformVec3Instance(ShadyUniform<Vector3> description)
+      : isResolution = description.transformer == ShadyUniformVec3.resolution,
+        super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
