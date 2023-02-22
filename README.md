@@ -5,79 +5,84 @@ An attempt at making it easier to play around with custom GLSL shaders in Flutte
 Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/development/ui/advanced/shaders).
 
 ## How to use
-1. In your code, prepare a `Shady` instance with details about the shaders you want to use. It's important to add *all* uniforms, and to add them in *the same order* that they appear in the shader code.
+1. In your code, prepare a `Shady` instance with details about the shader programs you want to use. It's important to add *all* uniforms and textures, and to add them in *the same order* as they appear in the shader program.
     ```
+    /* myShader.frag */
+
+    uniform float uniformOne;
+    uniform float uniformTwo;
+    uniform sampler2D textureOne;
+
+    [...]
+    ```
+
+    ```
+    /* Flutter code */
     final shady = Shady([
-      ShaderDetails('assets/myshader.frag')
-        ..usesUniform(UniformFloat('friendlyNameOne'))
-        ..usesUniform(UniformFloat('friendlyNameTwo')),
+      ShadyShader(
+        key: 'myShader',
+        asset: 'assets/shaders/myShader.frag',
+        uniforms: [
+          ShadyUniformFloat(key: 'uniformOne'),
+          ShadyUniformFloat(key: 'uniformTwo'),
+        ],
+        textures: [
+          ShadyTexture(
+            key: 'textureOne',
+            asset: 'assets/texture1.png',
+          ),
+        ],
+      ),
     ]);
+
+    [...]
     ```
 2. When appropriate, load the shader programs.
     ```
     await shady.load();
     ```
-3. Use the `ShadyCanvas` widget where you want to use your shader.
+3. Use one of the supplied widgets where you want to display your shader.
     ```
     SizedBox(
       width: 200,
       height: 200,
       child: ShadyCanvas(
-        shader: shady.get('assets/myshader.frag'),
+        shader: shady.get('myShader'),
       ),
     ),
     ```
-4. Modify the uniforms of your shaders whenever by using your `Shady` instance
+4. Modify your shader parameters by using your `Shady` instance whenever
     ```
-    final shader = shady.get('assets/myshader.frag');
-    shader.setUniform('friendlyNameOne', 0.4);
+    shady.get('myShader').setValue('uniformOne', 0.4);
+    shady.get('myShader').setTexture('textureOne', 'assets/texture2.png');
     ```
 
 ## Other features
 
-#### Textures
-
-Texture samplers are defined the same way as uniforms. However, you need to provide a Flutter `BuildContext` for Shady to be able to resolve image files.
-
-```
-  ShaderDetails('assets/myshader.frag')
-    ..usesTexture(
-      Texture(context, 'friendlyName', 'assets/image.png'),
-    )
-```
-
-Textures can be switched like uniforms:
-
-```
-final shader = shady.get('assets/myshader.frag');
-shader.setTexture('friendlyName', 'assets/image2.png');
-```
-
-
 #### Transformers
 
-You can set a transformer to be used by a uniform value. This is a callback that is called every frame for you to transform the value however you want.
+Transformers are callbacks that are called every frame to transform a uniform value using the previous value and a delta time.
 
 ```
-  ShaderDetails('assets/myshader.frag')
-    ..usesUniform(
-      'friendlyName',
-      UniformFloat(0)
-        ..withTransformer(
-          (previousValue, deltaSeconds) => previousValue + deltaSeconds,
-        )),
+  ShadyUniformFloat(
+    key: 'transformedFloat',
+    transformer: (previousValue, deltaSeconds) => previousValue + deltaSeconds,
+  )
 ```
 
 There are some static premade transforms available on the `Uniform*` classes.
 
 ```
-  ShaderDetails('assets/myshader.frag')
-    ..usesUniform(
-      UniformFloat('friendlyName', 0)
-        ..withTransformer(
-          UniformFloat.withTransformer(UniformFloat.secondsPassed)
-        )
-    ),
+  ShadyUniformFloat(
+    key: 'transformedFloat',
+    transformer: ShadyUniformFloat.secondsPassed,
+  )
+```
+
+Transformers can be switched.
+
+```
+  shady.get('myShader').setTransformer((prev, dt) => prev + (dt * 2));
 ```
 
 #### Using ShaderToy shaders
@@ -104,11 +109,14 @@ uniform sampler2D iChannel2;
 void main(void) { mainImage(fragColor, FlutterFragCoord()); }
 ```
 
-Then, when adding your `ShaderDetails`, call the magic `.usesShaderToyUniforms()` method to automatically add and wire the listed uniforms such that it mostly works.
+Then, when defining your `ShadyShader`, flag it using the parameter `shaderToy` to automatically add and wire the listed uniforms such that it mostly works.
 
 ```
-ShaderDetails('assets/shaders/myshader.frag')
-  ..usesShaderToyUniforms(context);
+ShadyShader(
+  key: 'myStShader'
+  asset: 'assets/shaders/myShaderToyShader.frag'),
+  shaderToy: true,
+),
 ```
 
 Only the ShaderToy uniforms listed are supported, and the only supported data type for channels is 2D textures (`sampler2D`).
