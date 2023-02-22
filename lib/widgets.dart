@@ -2,13 +2,15 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shady/controllers.dart';
 
+/// A widget that continuously draws a Shady shader.
+///
+/// The [shader] argument is typically a [ShaderController] retrieved by calling [Shady.get].
 class ShadyCanvas extends StatefulWidget {
   final ShaderController shader;
 
   const ShadyCanvas({
     required this.shader,
     Key? key,
-    Widget? child,
   }) : super(key: key);
 
   @override
@@ -48,6 +50,10 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
   }
 }
 
+/// A convenience widget wrapping a [ShadyCanvas] in a [Stack].
+///
+/// The [child] is drawn on top, and can be wrapped in a [Positioned] to control layout.
+/// The [shader] is typically a [ShaderController] retrieved by calling [Shady.get].
 class ShadyStack extends StatelessWidget {
   final Widget? child;
   final ShaderController shader;

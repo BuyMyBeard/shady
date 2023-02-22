@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart' hide Image;
-import 'package:shady/descriptors.dart';
 import 'package:shady/internal/painter.dart';
 import 'package:shady/internal/uniforms.dart';
 import 'package:shady/shady.dart';

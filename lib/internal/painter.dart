@@ -3,6 +3,7 @@ import 'package:shady/internal/shader.dart';
 import 'package:shady/internal/uniforms.dart';
 import 'package:vector_math/vector_math.dart';
 
+/// A painter that draws a Shady shader.
 class ShadyPainter extends CustomPainter {
   Size? _lastSize;
   final ShaderInstance _shader;

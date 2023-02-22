@@ -16,6 +16,7 @@ export 'widgets.dart';
 
 typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
 
+/// A mapping of user-created shaders and ways to manipulate them.
 class Shady {
   final List<ShadyShader> descriptions;
   final List<WeakReference<ShaderController>> _controllerRefs = [];
@@ -28,8 +29,13 @@ class Shady {
   var _updating = false;
   bool get ready => _ready;
 
+  /// Creates a [Shady] instance that facilitates interaction with
+  /// shader assets according to the provided [descriptions].
   Shady(this.descriptions);
 
+  /// Parses the previously provided shader descriptions and initializes their [FragmentProgram]s.
+  ///
+  /// [context] is used for [AssetBundle] look-ups, so this can be called high up in an app's widget tree.
   Future<void> load(BuildContext context) async {
     if (_ready == true) {
       return;
@@ -48,23 +54,27 @@ class Shady {
     _ready = true;
   }
 
-  ShaderController get(String shaderAssetKey) {
+  /// Creates a [ShaderController] that allows manipulation of the shader with key [shaderKey].
+  ShaderController get(String shaderKey) {
     try {
-      final controller = ShaderController(_shaders[shaderAssetKey]!);
+      final controller = ShaderController(_shaders[shaderKey]!);
       _controllerRefs.add(WeakReference(controller));
       _ensureUpdating();
 
       return controller;
     } catch (e) {
-      throw Exception('Shader with asset key "$shaderAssetKey" not found.');
+      throw Exception('Shader with key "$shaderKey" not found.');
     }
   }
 
+  /// Clears this [Shady] instance.
+  ///
+  /// It is unusable and empty after this.
   void dispose() {
-    _ready = false;
     _controllerRefs.clear();
     _shaders.clear();
     _uniforms.clear();
+    _ready = false;
   }
 
   void _ensureUpdating() {
