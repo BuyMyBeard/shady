@@ -6,6 +6,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
 
 ## How to use
 1. In your code, prepare a `Shady` instance with details about the shader programs you want to use. It's important to add *all* uniforms and textures, and to add them in *the same order* as they appear in the shader program.
+
     ```
     /* myShader.frag */
 
@@ -18,6 +19,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
 
     ```
     /* Flutter code */
+
     final shady = Shady([
       ShadyShader(
         key: 'myShader',
