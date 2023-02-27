@@ -17,16 +17,9 @@ class ShadyCanvas extends StatefulWidget {
 }
 
 class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStateMixin {
-  late final AnimationController _ac;
-
   @override
   void initState() {
     super.initState();
-    _ac = AnimationController.unbounded(
-      vsync: this,
-      duration: const Duration(days: 1),
-    )..forward();
-
     widget._shady.setRefs(1);
     widget._shady.update();
   }
@@ -34,22 +27,21 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
   @override
   void dispose() {
     widget._shady.setRefs(-1);
-    _ac.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-        animation: _ac,
-        child: CustomPaint(
-          willChange: true,
-          painter: widget._shady.painter,
-          child: const ColoredBox(color: Color(0x10203000), child: const SizedBox(width: 100, height: 100)),
-        ),
-        builder: (context, child) {
-          return child!;
-        });
+      animation: Animation.fromValueListenable(widget._shady._notifier),
+      child: CustomPaint(
+        willChange: true,
+        painter: widget._shady.painter,
+      ),
+      builder: (context, child) {
+        return child!;
+      },
+    );
   }
 }
 

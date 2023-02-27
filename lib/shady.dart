@@ -34,8 +34,8 @@ class Shady {
   Paint _paint = Paint();
   Paint? get paint => _paint;
 
-  late final CustomPainter _painter;
-  CustomPainter get painter => _painter;
+  CustomPainter? _painter;
+  CustomPainter? get painter => _painter;
 
   var _updateQueued = false;
   var _ready = false;
@@ -75,7 +75,6 @@ class Shady {
 
     _textureDescriptions.addAll(textures ?? <ShadyTexture>[]);
     _uniformDescriptions.addAll(uniforms ?? <ShadyUniform>[]);
-    _painter = ShadyPainter(this);
   }
 
   /// Parses the previously provided descriptions and
@@ -124,6 +123,7 @@ class Shady {
     }
 
     _paint = Paint()..shader = _shader!;
+    _painter = ShadyPainter(this);
     _ready = true;
   }
 
