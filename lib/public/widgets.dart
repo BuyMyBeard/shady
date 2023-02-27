@@ -1,52 +1,55 @@
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
-import 'package:shady/controllers.dart';
+part of '../shady.dart';
 
 /// A widget that continuously draws a Shady shader.
 ///
 /// The [shader] argument is typically a [ShaderController] retrieved by calling [Shady.get].
 class ShadyCanvas extends StatefulWidget {
-  final ShaderController shader;
+  final Shady _shady;
 
   const ShadyCanvas({
-    required this.shader,
+    required Shady shady,
     Key? key,
-  }) : super(key: key);
+  })  : _shady = shady,
+        super(key: key);
 
   @override
   State<ShadyCanvas> createState() => _ShadyCanvasState();
 }
 
 class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStateMixin {
-  late final Ticker _ticker;
-  final ValueNotifier _notifier = ValueNotifier(0);
+  late final AnimationController _ac;
 
   @override
   void initState() {
-    _ticker = createTicker((_) => _notifier.value += 1);
-    _ticker.start();
     super.initState();
+    _ac = AnimationController.unbounded(
+      vsync: this,
+      duration: const Duration(days: 1),
+    )..forward();
+
+    widget._shady.setRefs(1);
+    widget._shady.update();
   }
 
   @override
   void dispose() {
-    _ticker.dispose();
-    _notifier.dispose();
+    widget._shady.setRefs(-1);
+    _ac.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _notifier,
-      builder: (context, child) {
-        return CustomPaint(
-          key: Key(_notifier.value.toString()),
+        animation: _ac,
+        child: CustomPaint(
           willChange: true,
-          painter: widget.shader.painter,
-        );
-      },
-    );
+          painter: widget._shady.painter,
+          child: const ColoredBox(color: Color(0x10203000), child: const SizedBox(width: 100, height: 100)),
+        ),
+        builder: (context, child) {
+          return child!;
+        });
   }
 }
 
@@ -56,11 +59,11 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
 /// The [shader] is typically a [ShaderController] retrieved by calling [Shady.get].
 class ShadyStack extends StatelessWidget {
   final Widget? child;
-  final ShaderController shader;
+  final Shady shady;
 
   const ShadyStack({
-    required this.shader,
     Key? key,
+    required this.shady,
     this.child,
   }) : super(key: key);
 
@@ -69,7 +72,7 @@ class ShadyStack extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: ShadyCanvas(shader: shader),
+          child: ShadyCanvas(shady: shady),
         ),
         if (child != null) child!,
       ],

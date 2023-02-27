@@ -1,8 +1,6 @@
-import 'dart:ui';
-import 'package:flutter/widgets.dart' hide Image;
-import 'package:shady/shady.dart';
-import 'package:vector_math/vector_math.dart';
+part of '../shady.dart';
 
+@protected
 class TextureInstance {
   late final String key;
   late final ValueNotifier<Image?> _notifier;
@@ -31,6 +29,7 @@ class TextureInstance {
   }
 }
 
+@protected
 abstract class UniformInstance<T> {
   late final String key;
   late final ValueNotifier<T> notifier;
@@ -60,6 +59,7 @@ abstract class UniformInstance<T> {
   int apply(FragmentShader shader, int index);
 }
 
+@protected
 class UniformFloatInstance extends UniformInstance<double> {
   UniformFloatInstance(ShadyUniform<double> description) : super(description);
 
@@ -70,6 +70,7 @@ class UniformFloatInstance extends UniformInstance<double> {
   }
 }
 
+@protected
 class UniformVec2Instance extends UniformInstance<Vector2> {
   UniformVec2Instance(ShadyUniform<Vector2> description) : super(description);
 
@@ -81,6 +82,7 @@ class UniformVec2Instance extends UniformInstance<Vector2> {
   }
 }
 
+@protected
 class UniformVec3Instance extends UniformInstance<Vector3> {
   final bool isResolution;
   UniformVec3Instance(ShadyUniform<Vector3> description)
@@ -96,6 +98,7 @@ class UniformVec3Instance extends UniformInstance<Vector3> {
   }
 }
 
+@protected
 class UniformVec4Instance extends UniformInstance<Vector4> {
   UniformVec4Instance(ShadyUniform<Vector4> description) : super(description);
 

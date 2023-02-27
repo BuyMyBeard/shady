@@ -107,7 +107,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     vec2 uv = fragCoord/iResolution.x;
 	float shade = pattern(uv);
-    fragColor = vec4(colormap(shade).rgb, shade);
+    // fragColor = vec4(colormap(shade).rgb, shade);
+    fragColor = vec4(1.);
 }
 
 ////////////// Shadertoy END

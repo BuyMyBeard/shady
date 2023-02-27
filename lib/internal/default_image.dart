@@ -1,6 +1,6 @@
-import 'dart:convert';
-import 'dart:ui';
+part of '../shady.dart';
 
+@protected
 Future<Image> getDefaultImage() async {
   final bytes = base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEA'

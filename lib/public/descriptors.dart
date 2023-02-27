@@ -1,5 +1,4 @@
-import 'package:shady/shady.dart';
-import 'package:vector_math/vector_math.dart';
+part of '../shady.dart';
 
 /// A specification of a shader program.
 class ShadyShader {

@@ -1,24 +1,22 @@
-import 'package:flutter/rendering.dart';
-import 'package:shady/internal/shader.dart';
-import 'package:shady/internal/uniforms.dart';
-import 'package:vector_math/vector_math.dart';
+part of '../shady.dart';
 
 /// A painter that draws a Shady shader.
+@protected
 class ShadyPainter extends CustomPainter {
   Size? _lastSize;
-  final ShaderInstance _shader;
+  final Shady _shady;
   final Paint _paint;
-  final bool shaderToyed;
 
-  ShadyPainter(ShaderInstance shader, this.shaderToyed)
-      : _shader = shader,
-        _paint = Paint()..shader = shader.shader;
+  ShadyPainter(Shady shady)
+      : _shady = shady,
+        _paint = shady._paint,
+        super(repaint: shady._notifier);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size != _lastSize) {
       _lastSize = size;
-      for (final uniform in _shader.uniformKeyMap.values) {
+      for (final uniform in _shady._uniforms.values) {
         if (uniform is UniformVec3Instance && uniform.isResolution) {
           uniform.notifier.value = Vector3(size.width, size.height, 0);
         }
