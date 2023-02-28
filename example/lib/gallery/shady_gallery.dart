@@ -31,17 +31,29 @@ class _ShadyGalleryState extends State<ShadyGallery> {
 
   void _nextShader() {
     final currentIdx = _shadies.indexOf(_shady!);
-    final nextIdx = (currentIdx < (_shadies.length - 1)) ? (currentIdx + 1) : 0;
+    final nextIdx = (currentIdx + 1) % _shadies.length;
     setState(() => _shady = _shadies[nextIdx]);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_shady == null) {
-      return const Center(child: LinearProgressIndicator());
+      return ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: SizedBox(
+            width: 80,
+            height: 10,
+            child: LinearProgressIndicator(
+              backgroundColor: Colors.grey.shade600,
+              color: Colors.purple.shade400,
+            ),
+          ),
+        ),
+      );
     }
 
-    Widget canvas = ShadyCanvas(key: Key(_shady!.assetName), shady: _shady!);
+    Widget canvas = ShadyCanvas(_shady!, key: Key(_shady!.assetName));
     if (_zoomOut == 1) {
       canvas = Center(child: SizedBox(height: 460, width: 340, child: canvas));
     } else if (_zoomOut == 2) {

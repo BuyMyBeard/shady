@@ -5,7 +5,7 @@ An attempt at making it easier to play around with custom GLSL shaders in Flutte
 Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/development/ui/advanced/shaders).
 
 ## How to use
-1. In your code, prepare a `Shady` instance with details about the shader programs you want to use. It's important to add *all* uniforms and textures, and to add them in *the same order* as they appear in the shader program.
+1. In your code, prepare a `Shady` instance with details about the shader program. It's important to add *all* uniforms and textures, and to add them in *the same order* as they appear in the shader program.
 
     ```
     /* myShader.frag */
@@ -20,26 +20,23 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
     ```
     /* Flutter code */
 
-    final shady = Shady([
-      ShadyShader(
-        key: 'myShader',
-        asset: 'assets/shaders/myShader.frag',
-        uniforms: [
-          ShadyUniformFloat(key: 'uniformOne'),
-          ShadyUniformFloat(key: 'uniformTwo'),
-        ],
-        textures: [
-          ShadyTexture(
-            key: 'textureOne',
-            asset: 'assets/texture1.png',
-          ),
-        ],
-      ),
-    ]);
+    final shady = Shady(
+      assetName: 'assets/shaders/myShader.frag',
+      uniforms: [
+        ShadyUniformFloat(key: 'uniformOne'),
+        ShadyUniformFloat(key: 'uniformTwo'),
+      ],
+      textures: [
+        ShadyTexture(
+          key: 'textureOne',
+          asset: 'assets/texture1.png',
+        ),
+      ],
+    );
 
     [...]
     ```
-2. When appropriate, load the shader programs.
+2. When appropriate, load the shader program.
     ```
     await shady.load();
     ```
@@ -48,15 +45,13 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
     SizedBox(
       width: 200,
       height: 200,
-      child: ShadyCanvas(
-        shader: shady.get('myShader'),
-      ),
+      child: ShadyCanvas(shady),
     ),
     ```
-4. Modify your shader parameters by using your `Shady` instance whenever
+4. Modify your shader parameters by using your `Shady` instance
     ```
-    shady.get('myShader').setValue('uniformOne', 0.4);
-    shady.get('myShader').setTexture('textureOne', 'assets/texture2.png');
+    shady.setValue('uniformOne', 0.4);
+    shady.setTexture('textureOne', 'assets/texture2.png');
     ```
 
 ## Other features
@@ -84,7 +79,7 @@ There are some static premade transforms available on the `Uniform*` classes.
 Transformers can be switched.
 
 ```
-  shady.get('myShader').setTransformer((prev, dt) => prev + (dt * 2));
+  shady.setTransformer('uniformOne', (prev, dt) => prev + (dt * 2));
 ```
 
 #### Using ShaderToy shaders
@@ -111,20 +106,19 @@ uniform sampler2D iChannel2;
 void main(void) { mainImage(fragColor, FlutterFragCoord()); }
 ```
 
-Then, when defining your `ShadyShader`, flag it using the parameter `shaderToy` to automatically add and wire the listed uniforms such that it mostly works.
+Then, when creating your `Shady` instance, flag it using the parameter `shaderToy` to automatically add and wire the ShaderToy uniforms. The supported uniforms will then automatically be updated the same way as they are on ShaderToy.
 
 ```
-ShadyShader(
-  key: 'myStShader'
-  asset: 'assets/shaders/myShaderToyShader.frag'),
+Shady(
+  assetName: 'assets/shaders/myShaderToyShader.frag'),
   shaderToy: true,
 ),
 ```
 
 Only the ShaderToy uniforms listed are supported, and the only supported data type for channels is 2D textures (`sampler2D`).
 
-`iMouse` might be supported at some point somehow.
+`iMouse` might be supported at some point somehow using some widget some way.
 
 ## Additional information
 
-The `example` app is a gallery of various shaders sourced from elsewhere. Have a look for inspiration and such.
+The `example` has a gallery of various shaders. Have a look for inspiration and such.

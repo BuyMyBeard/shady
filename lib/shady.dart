@@ -102,7 +102,9 @@ class Shady {
         _uniforms[uniformDescription.key] = UniformVec4Instance(uniformDescription);
       } else {
         throw Exception(
-            "Unable to load: unsupported uniform type: ${uniformDescription.runtimeType}");
+          'Unable to load: unsupported uniform type: '
+          '${uniformDescription.runtimeType}',
+        );
       }
 
       var instance = _uniforms[uniformDescription.key]!;

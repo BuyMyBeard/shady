@@ -6,8 +6,7 @@ part of '../shady.dart';
 class ShadyCanvas extends StatefulWidget {
   final Shady _shady;
 
-  const ShadyCanvas({
-    required Shady shady,
+  const ShadyCanvas(shady, {
     Key? key,
   })  : _shady = shady,
         super(key: key);
@@ -64,7 +63,7 @@ class ShadyStack extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: ShadyCanvas(shady: shady),
+          child: ShadyCanvas(shady),
         ),
         if (child != null) child!,
       ],
