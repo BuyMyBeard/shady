@@ -7,7 +7,7 @@ final interactiveShaders = [
       UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
       UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
       UniformVec2(key: 'inputCoord'),
-      UniformFloat(key: 'intensity', initialValue: 1)
+      UniformFloat(key: 'intensity', initialValue: 0)
     ],
   ),
   Shady(
@@ -16,7 +16,7 @@ final interactiveShaders = [
       UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
       UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
       UniformVec2(key: 'inputCoord'),
-      UniformFloat(key: 'intensity', initialValue: 1)
+      UniformFloat(key: 'intensity', initialValue: 0)
     ],
   ),
 ];
