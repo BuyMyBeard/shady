@@ -7,7 +7,7 @@ class TextureInstance {
   late final AssetBundle _bundle;
   ValueNotifier<Image?> get notifier => _notifier;
 
-  TextureInstance(AssetBundle bundle, ShadyTexture description, Image defaultImage)
+  TextureInstance(AssetBundle bundle, TextureSampler description, Image defaultImage)
       : _bundle = bundle {
     key = description.key;
     _notifier = ValueNotifier(defaultImage);
@@ -33,11 +33,11 @@ class TextureInstance {
 abstract class UniformInstance<T> {
   late final String key;
   late final ValueNotifier<T> notifier;
-  ShadyValueTransformer<T> transformer = (a, b) => a;
+  UniformTransformer<T> transformer = (a, b) => a;
 
   Duration? _lastTs;
 
-  UniformInstance(ShadyUniform<T> description)
+  UniformInstance(UniformValue<T> description)
       : key = description.key,
         notifier = ValueNotifier<T>(description.initialValue),
         transformer = description.transformer;
@@ -52,7 +52,7 @@ abstract class UniformInstance<T> {
     notifier.value = value;
   }
 
-  void setTransformer(ShadyValueTransformer<T> transformer) {
+  void setTransformer(UniformTransformer<T> transformer) {
     transformer = transformer;
   }
 
@@ -61,7 +61,7 @@ abstract class UniformInstance<T> {
 
 @protected
 class UniformFloatInstance extends UniformInstance<double> {
-  UniformFloatInstance(ShadyUniform<double> description) : super(description);
+  UniformFloatInstance(UniformValue<double> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
@@ -72,7 +72,7 @@ class UniformFloatInstance extends UniformInstance<double> {
 
 @protected
 class UniformVec2Instance extends UniformInstance<Vector2> {
-  UniformVec2Instance(ShadyUniform<Vector2> description) : super(description);
+  UniformVec2Instance(UniformValue<Vector2> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {
@@ -85,8 +85,8 @@ class UniformVec2Instance extends UniformInstance<Vector2> {
 @protected
 class UniformVec3Instance extends UniformInstance<Vector3> {
   final bool isResolution;
-  UniformVec3Instance(ShadyUniform<Vector3> description)
-      : isResolution = description.transformer == ShadyUniformVec3.resolution,
+  UniformVec3Instance(UniformValue<Vector3> description)
+      : isResolution = description.transformer == UniformVec3.resolution,
         super(description);
 
   @override
@@ -100,7 +100,7 @@ class UniformVec3Instance extends UniformInstance<Vector3> {
 
 @protected
 class UniformVec4Instance extends UniformInstance<Vector4> {
-  UniformVec4Instance(ShadyUniform<Vector4> description) : super(description);
+  UniformVec4Instance(UniformValue<Vector4> description) : super(description);
 
   @override
   int apply(FragmentShader shader, int index) {

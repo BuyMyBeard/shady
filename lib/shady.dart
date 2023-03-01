@@ -15,7 +15,7 @@ part 'internal/painter.dart';
 
 /// Transformer function that generates a new value
 /// based on the [previousValue] one and a [delta] duration.
-typedef ShadyValueTransformer<T> = T Function(T previousValue, Duration delta);
+typedef UniformTransformer<T> = T Function(T previousValue, Duration delta);
 
 /// A mapping of user-created shaders and ways to manipulate them.
 class Shady {
@@ -23,10 +23,10 @@ class Shady {
   String get assetName => _assetName;
 
   final bool _shaderToy;
-  final _uniformDescriptions = <ShadyUniform>[];
-  final _textureDescriptions = <ShadyTexture>[];
+  final _uniformDescriptions = <UniformValue>[];
+  final _samplerDescriptions = <TextureSampler>[];
   final _uniforms = <String, UniformInstance>{};
-  final _textures = <String, TextureInstance>{};
+  final _samplers = <String, TextureInstance>{};
   final _notifier = ValueNotifier(false);
 
   FragmentShader? _shader;
@@ -45,36 +45,36 @@ class Shady {
   ///
   /// [Shady] facilitates interaction with the provided shader
   /// program at [assetName], according to the provided
-  /// [textures] and [uniforms]. [Shady.load] must be called before
+  /// [samplers] and [uniforms]. [Shady.load] must be called before
   /// the [Shady] instance is used by any widget.
   ///
   /// Once loaded, a [Shady] instance can be reused (though the uniform
   /// values will be the same for all references).
   Shady({
     required String assetName,
-    List<ShadyTexture>? textures,
-    List<ShadyUniform>? uniforms,
+    List<TextureSampler>? samplers,
+    List<UniformValue>? uniforms,
     bool? shaderToy,
   })  : _assetName = assetName,
         _shaderToy = shaderToy ?? false {
     if (_shaderToy) {
       _uniformDescriptions.addAll([
-        ShadyUniformVec3(key: 'iResolution', transformer: ShadyUniformVec3.resolution),
-        ShadyUniformFloat(key: 'iTime', transformer: ShadyUniformFloat.secondsPassed),
-        ShadyUniformFloat(key: 'iTimeDelta', transformer: ShadyUniformFloat.frameDelta),
-        ShadyUniformFloat(key: 'iFrameRate', transformer: ShadyUniformFloat.frameRate),
-        ShadyUniformVec4(key: 'iMouse'),
+        UniformVec3(key: 'iResolution', transformer: UniformVec3.resolution),
+        UniformFloat(key: 'iTime', transformer: UniformFloat.secondsPassed),
+        UniformFloat(key: 'iTimeDelta', transformer: UniformFloat.frameDelta),
+        UniformFloat(key: 'iFrameRate', transformer: UniformFloat.frameRate),
+        UniformVec4(key: 'iMouse'),
       ]);
 
-      _textureDescriptions.addAll([
-        ShadyTexture(key: 'iChannel0'),
-        ShadyTexture(key: 'iChannel1'),
-        ShadyTexture(key: 'iChannel2')
+      _samplerDescriptions.addAll([
+        TextureSampler(key: 'iChannel0'),
+        TextureSampler(key: 'iChannel1'),
+        TextureSampler(key: 'iChannel2')
       ]);
     }
 
-    _textureDescriptions.addAll(textures ?? <ShadyTexture>[]);
-    _uniformDescriptions.addAll(uniforms ?? <ShadyUniform>[]);
+    _samplerDescriptions.addAll(samplers ?? <TextureSampler>[]);
+    _uniformDescriptions.addAll(uniforms ?? <UniformValue>[]);
   }
 
   /// Parses the previously provided descriptions and
@@ -92,13 +92,13 @@ class Shady {
 
     var index = 0;
     for (final uniformDescription in (_uniformDescriptions)) {
-      if (uniformDescription is ShadyUniform<double>) {
+      if (uniformDescription is UniformValue<double>) {
         _uniforms[uniformDescription.key] = UniformFloatInstance(uniformDescription);
-      } else if (uniformDescription is ShadyUniform<Vector2>) {
+      } else if (uniformDescription is UniformValue<Vector2>) {
         _uniforms[uniformDescription.key] = UniformVec2Instance(uniformDescription);
-      } else if (uniformDescription is ShadyUniform<Vector3>) {
+      } else if (uniformDescription is UniformValue<Vector3>) {
         _uniforms[uniformDescription.key] = UniformVec3Instance(uniformDescription);
-      } else if (uniformDescription is ShadyUniform<Vector4>) {
+      } else if (uniformDescription is UniformValue<Vector4>) {
         _uniforms[uniformDescription.key] = UniformVec4Instance(uniformDescription);
       } else {
         throw Exception(
@@ -114,11 +114,11 @@ class Shady {
     }
 
     index = 0;
-    for (final textureDescription in _textureDescriptions) {
+    for (final textureDescription in _samplerDescriptions) {
       var scopeIndex = index;
 
       final instance = TextureInstance(assetBundle, textureDescription, defaultImage);
-      _textures[instance.key] = instance;
+      _samplers[instance.key] = instance;
 
       index = instance.apply(_shader!, scopeIndex);
       instance.notifier.addListener(() => instance.apply(_shader!, scopeIndex));
@@ -129,27 +129,27 @@ class Shady {
     _ready = true;
   }
 
-  /// Sets the [asset] to be used by the texture with key [textureKey].
-  void setTexture(String textureKey, String assetKey) {
+  /// Sets the [asset] image to be used by the texture sampler with key [samplerKey].
+  void setTexture(String samplerKey, String assetKey) {
     assert(_ready, 'setTexture was called before Shady instance was .load()\'ed');
 
     try {
-      final texture = _textures[textureKey];
-      texture!.load(assetKey);
+      final sampler = _samplers[samplerKey];
+      sampler!.load(assetKey);
     } catch (e) {
-      throw Exception('Texture with key "$textureKey" not found.');
+      throw Exception('Texture sampler with key "$samplerKey" not found.');
     }
   }
 
-  /// Retrieve the image used by the texture with key [textureKey].
-  Image? getImage(String textureKey) {
+  /// Retrieve the image used by the texture with key [samplerKey].
+  Image? getImage(String samplerKey) {
     assert(_ready, 'getImage was called before Shady instance was .load()\'ed');
 
     try {
-      final texture = _textures[textureKey];
+      final texture = _samplers[samplerKey];
       return texture!.notifier.value;
     } catch (e) {
-      throw Exception('Texture with key "$textureKey" not found.');
+      throw Exception('Texture with key "$samplerKey" not found.');
     }
   }
 
@@ -166,7 +166,7 @@ class Shady {
   }
 
   /// Sets the [transformer] to be used by the uniform with key [uniformKey].
-  void setTransformer<T>(String uniformKey, ShadyValueTransformer<T> transformer) {
+  void setTransformer<T>(String uniformKey, UniformTransformer<T> transformer) {
     assert(_ready, 'setTransformer was called before Shady instance was .load()\'ed');
 
     try {

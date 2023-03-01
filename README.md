@@ -5,10 +5,10 @@ An attempt at making it easier to play around with custom GLSL shaders in Flutte
 Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/development/ui/advanced/shaders).
 
 ## How to use
-1. In your code, prepare a `Shady` instance with details about the shader program. It's important to add *all* uniforms and textures, and to add them in *the same order* as they appear in the shader program.
+1. In your code, prepare a `Shady` instance with details about the shader program. It's important to add *all* uniforms and texture samplers, and to add them in *the same order* as they appear in the shader program.
 
     ```
-    /* myShader.frag */
+    /* assets/shaders/myShader.frag */
 
     uniform float uniformOne;
     uniform float uniformTwo;
@@ -23,11 +23,11 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
     final shady = Shady(
       assetName: 'assets/shaders/myShader.frag',
       uniforms: [
-        ShadyUniformFloat(key: 'uniformOne'),
-        ShadyUniformFloat(key: 'uniformTwo'),
+        UniformFloat(key: 'uniformOne'),
+        UniformFloat(key: 'uniformTwo'),
       ],
-      textures: [
-        ShadyTexture(
+      samplers: [
+        TextureSampler(
           key: 'textureOne',
           asset: 'assets/texture1.png',
         ),
@@ -50,7 +50,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
     ```
 4. Modify your shader parameters by using your `Shady` instance
     ```
-    shady.setValue('uniformOne', 0.4);
+    shady.setUniform<double>('uniformOne', 0.4);
     shady.setTexture('textureOne', 'assets/texture2.png');
     ```
 
@@ -62,16 +62,20 @@ Transformers are callbacks that are called every frame to transform a uniform va
 
 ```
   ShadyUniformFloat(
-    key: 'transformedFloat',
-    transformer: (previousValue, deltaSeconds) => previousValue + deltaSeconds,
+    key: 'uniformOne',
+    transformer: (previousValue, deltaDuration) {
+      return previousValue + (deltaDuration.inMilliseconds / 1000);
+    },
   )
 ```
 
-There are some static premade transforms available on the `Uniform*` classes.
+There are some common premade transforms available as static members on the `Uniform*` classes.
 
 ```
+  // This is equivalent to the above snippet
+
   ShadyUniformFloat(
-    key: 'transformedFloat',
+    key: 'uniformOne',
     transformer: ShadyUniformFloat.secondsPassed,
   )
 ```
@@ -79,7 +83,13 @@ There are some static premade transforms available on the `Uniform*` classes.
 Transformers can be switched.
 
 ```
-  shady.setTransformer('uniformOne', (prev, dt) => prev + (dt * 2));
+  shady.setTransformer(
+    'uniformOne',
+    (previousValue, deltaDuration) {
+      // Let's go twice as fast!
+      return previousValue + ((deltaDuration.inMilliseconds / 1000) * 2);
+    },
+  );
 ```
 
 #### Using ShaderToy shaders

@@ -17,17 +17,17 @@ final galleryShaders = [
   Shady(
     assetName: 'assets/shaders/img0.frag',
     uniforms: [
-      ShadyUniformFloat(
+      UniformFloat(
         key: 'time',
-        transformer: ShadyUniformFloat.secondsPassed,
+        transformer: UniformFloat.secondsPassed,
       ),
-      ShadyUniformVec3(
+      UniformVec3(
         key: 'resolution',
-        transformer: ShadyUniformVec3.resolution,
+        transformer: UniformVec3.resolution,
       ),
     ],
-    textures: [
-      ShadyTexture(
+    samplers: [
+      TextureSampler(
         key: 'cat',
         asset: 'assets/textures/cat.png',
       ),
