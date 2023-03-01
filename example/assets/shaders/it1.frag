@@ -10,8 +10,6 @@ const vec2 p1 = vec2(.24, .18);
 const vec2 p2 = vec2(-.15, -.34);
 const vec2 p3 = vec2(-.33, .24);
 
-const vec3 color = vec3(1., .7, .2);
-
 out vec4 fragColor;
 void main()
 {
@@ -43,8 +41,7 @@ void main()
   );
 
   float value  = ((distance(uv, d1) + distance(uv, d2) + distance(uv, d3)) / 3.);
-  value = min(smoothstep(.2, .45, value), smoothstep(.45, .2, value));
-  value = clamp(0., 1., value);
+  value = min(smoothstep(.2, .3, value), smoothstep(.3, .2, value));
 
   vec3 vvalue = vec3(
     pow(value, 2.),

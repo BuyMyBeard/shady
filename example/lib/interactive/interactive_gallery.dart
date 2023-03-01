@@ -1,8 +1,68 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
-import 'package:shady_example/gallery/gallery_shaders.dart';
+import 'package:vector_math/vector_math.dart' hide Colors;
 
 import 'interactive_shaders.dart';
+
+class InteractiveWrapper extends StatefulWidget {
+  final Shady shady;
+
+  const InteractiveWrapper(this.shady, {super.key});
+
+  @override
+  State<InteractiveWrapper> createState() => _InteractiveWrapperState();
+}
+
+class _InteractiveWrapperState extends State<InteractiveWrapper>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController ac;
+  late final Stream<DateTime> updateStream;
+  late final StreamSubscription subscription;
+  late DateTime lastInteraction;
+  bool flipper = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ac = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    lastInteraction = DateTime.now();
+    updateStream = Stream.periodic(const Duration(milliseconds: 500), (_) => DateTime.now());
+
+    ac.addListener(() {
+      widget.shady.setUniform('intensity', ac.value);
+    });
+
+    subscription = updateStream.listen((dt) {
+      if (dt.difference(lastInteraction) > const Duration(seconds: 4) && ac.value > .5) {
+        ac.reverse();
+      }
+    });
+  }
+
+  void onInteraction(Vector2 _) {
+    ac.forward();
+    lastInteraction = DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    ac.dispose();
+    subscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ShadyInteractive(
+      widget.shady,
+      key: Key(widget.shady.assetName),
+      uniformVec2Key: 'inputCoord',
+      onInteraction: onInteraction,
+    );
+  }
+}
 
 class ShadyInteractives extends StatefulWidget {
   const ShadyInteractives({super.key});
@@ -59,11 +119,7 @@ class _ShadyInteractivesState extends State<ShadyInteractives> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: ShadyInteractive(
-              _shady!,
-              key: Key(_shady!.assetName),
-              uniformVec2Key: 'inputCoord',
-            ),
+            child: InteractiveWrapper(_shady!, key: Key(_shady!.assetName)),
           ),
           Positioned(
             bottom: 40,

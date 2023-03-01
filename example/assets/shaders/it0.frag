@@ -10,12 +10,11 @@ vec2 c = vec2(.5, .5);
 out vec4 fragColor;
 void main()
 {
+    float mi = 0.6 + (intensity * 0.4);
     vec2 uv = (FlutterFragCoord()/resolution.xy);
     float tr = time + 113.4;
     float r1 = 1. - (sin(time * 2.3) / 60.);
     float r2 = 1. - (sin(time * 3.2) / 60.);
-
-    float intensity = 1. + sin(intensity * 7.28);
 
     vec2 p1 = c + vec2(sin(tr * 0.2) * 0.25, cos(tr * 0.3) * 0.21);
     vec2 p2 = c + vec2(cos(tr * 0.4) * 0.11, sin(tr * 0.1) * 0.14);
@@ -26,9 +25,9 @@ void main()
     float d3 = (1.-distance(uv, mix(p3, input_coord, intensity)))*r2;
 
     fragColor = vec4(
-        pow(d1, 10.) * intensity,
-        pow(d2, 13.) * intensity,
-        pow(d3, 15.) * intensity,
+        pow(d1, 10.) * mi,
+        pow(d2, 13.) * mi,
+        pow(d3, 15.) * mi,
         1.
     );
 }
