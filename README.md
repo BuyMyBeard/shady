@@ -1,4 +1,4 @@
-An attempt at making it easier to play around with custom GLSL shaders in Flutter. Consider WIP and unstable until minor is bumped.
+# Shaderize your flutters.
 
 ## Getting started
 
@@ -122,13 +122,30 @@ Then, when creating your `Shady` instance, flag it using the parameter `shaderTo
 Shady(
   assetName: 'assets/shaders/myShaderToyShader.frag'),
   shaderToy: true,
-),
+)
 ```
 
 Only the ShaderToy uniforms listed are supported, and the only supported data type for channels is 2D textures (`sampler2D`).
 
-`iMouse` might be supported at some point somehow using some widget some way.
+
+#### Interactive shaders
+
+Shady includes a convenience widget for interactive shaders. It will wire interactions to selected uniforms and give you callbacks for interception.
+
+```
+ShadyInteractive(
+  shady,
+
+  // Will get normalized coordinates of interactions
+  uniformVec2Key: 'inputCoord',
+
+  // A callback that is called on interaction
+  onInteraction: (coord) => print('Was interacted at $coord'),
+)
+```
+
+A Shady that has been flagged as `shaderToy` will have the `iMouse` uniform automatically wired.
 
 ## Additional information
 
-The `example` has a gallery of various shaders. Have a look for inspiration and such.
+The `example` app has a gallery of various shaders. Have a look for inspiration and such.
