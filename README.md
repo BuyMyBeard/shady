@@ -8,7 +8,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
 1. In your code, prepare a `Shady` instance with details about the shader program. It's important to add *all* uniforms and texture samplers, and to add them in *the same order* as they appear in the shader program.
 
     ```
-    /* assets/shaders/myShader.frag */
+    /* assets/shaders/my_shader.frag */
 
     uniform float uniformOne;
     uniform float uniformTwo;
@@ -21,7 +21,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
     /* Flutter code */
 
     final shady = Shady(
-      assetName: 'assets/shaders/myShader.frag',
+      assetName: 'assets/shaders/my_shader.frag',
       uniforms: [
         UniformFloat(key: 'uniformOne'),
         UniformFloat(key: 'uniformTwo'),
@@ -61,7 +61,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
 Transformers are callbacks that are called every frame to transform a uniform value using the previous value and a delta time.
 
 ```
-  ShadyUniformFloat(
+  UniformFloat(
     key: 'uniformOne',
     transformer: (previousValue, deltaDuration) {
       return previousValue + (deltaDuration.inMilliseconds / 1000);
@@ -74,16 +74,16 @@ There are some common premade transforms available as static members on the `Uni
 ```
   // This is equivalent to the above snippet
 
-  ShadyUniformFloat(
+  UniformFloat(
     key: 'uniformOne',
-    transformer: ShadyUniformFloat.secondsPassed,
+    transformer: UniformFloat.secondsPassed,
   )
 ```
 
-Transformers can be switched.
+Transformers can be switched at any time.
 
 ```
-  shady.setTransformer(
+  shady.setTransformer<double>(
     'uniformOne',
     (previousValue, deltaDuration) {
       // Let's go twice as fast!
@@ -120,7 +120,7 @@ Then, when creating your `Shady` instance, flag it using the parameter `shaderTo
 
 ```
 Shady(
-  assetName: 'assets/shaders/myShaderToyShader.frag'),
+  assetName: 'assets/shaders/my_shadertoy_shader.frag'),
   shaderToy: true,
 )
 ```
@@ -136,10 +136,11 @@ Shady includes a convenience widget for interactive shaders. It will wire intera
 ShadyInteractive(
   shady,
 
-  // Will get normalized coordinates of interactions
+  // This vec2 uniform will hold normalized
+  // coordinates of the latest interaction.
   uniformVec2Key: 'inputCoord',
 
-  // A callback that is called on interaction
+  // A callback that is called on interaction.
   onInteraction: (coord) => print('Was interacted at $coord'),
 )
 ```
