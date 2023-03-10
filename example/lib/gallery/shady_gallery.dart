@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
 import 'package:shady_example/gallery/gallery_shaders.dart';
 
+import '../button.dart';
+
 class ShadyGallery extends StatefulWidget {
   const ShadyGallery({super.key});
 
@@ -73,25 +75,9 @@ class _ShadyGalleryState extends State<ShadyGallery> {
           Positioned(
             bottom: 40,
             right: 40,
-            child: FilledButton.icon(
-              label: const Text(
-                'N E X T',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w200,
-                ),
-              ),
-              onPressed: _nextShader,
-              style: const ButtonStyle(
-                side: MaterialStatePropertyAll(BorderSide(color: Colors.white54)),
-                padding: MaterialStatePropertyAll(EdgeInsets.all(10)),
-                backgroundColor: MaterialStatePropertyAll(Colors.black45),
-                foregroundColor: MaterialStatePropertyAll(Colors.black45),
-              ),
-              icon: const Icon(
-                Icons.arrow_right_alt_sharp,
-                color: Colors.white,
-              ),
+            child: ShadyButton(
+              onTap: _nextShader,
+              text: 'NEXT',
             ),
           ),
         ],

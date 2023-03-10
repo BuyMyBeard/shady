@@ -178,12 +178,12 @@ class Shady {
   }
 
   /// Clears the [transformer] for [uniformKey].
-  void clearTransformer(String uniformKey) {
+  void clearTransformer<T>(String uniformKey) {
     assert(_ready, 'clearTransformer was called before Shady instance was .load()\'ed');
 
     try {
-      final uniform = _uniforms[uniformKey];
-      uniform!.setTransformer((x, y) => x);
+      final uniform = (_uniforms[uniformKey] as UniformInstance<T>);
+      uniform.setTransformer((x, y) => x);
     } catch (e) {
       throw Exception('Uniform with key "$uniformKey" not found.');
     }

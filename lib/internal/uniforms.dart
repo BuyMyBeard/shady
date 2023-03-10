@@ -53,7 +53,7 @@ abstract class UniformInstance<T> {
   }
 
   void setTransformer(UniformTransformer<T> transformer) {
-    transformer = transformer;
+    this.transformer = transformer;
   }
 
   int apply(FragmentShader shader, int index);

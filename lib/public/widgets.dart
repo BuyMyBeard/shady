@@ -45,9 +45,10 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
   }
 }
 
-/// An interactive version of [ShadyCanvas]. The [UniformVec2] with key
-/// [uniformVec2Key] will be updated with the normalized coordinate of
-/// user interactions.
+/// An interactive version of [ShadyCanvas].
+///
+/// The [UniformVec2] with key [uniformVec2Key] will be
+/// updated with the normalized coordinate of user interactions.
 ///
 /// If the [Shady] instance has been flagged as `shaderToy`, the `iMouse`
 /// uniform will be populated instead.

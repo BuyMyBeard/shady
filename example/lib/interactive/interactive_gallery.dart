@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
+import 'package:shady_example/button.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 
 import 'interactive_shaders.dart';
@@ -17,39 +19,33 @@ class InteractiveWrapper extends StatefulWidget {
 
 class _InteractiveWrapperState extends State<InteractiveWrapper>
     with SingleTickerProviderStateMixin {
-  late final AnimationController ac;
-  late final Stream<DateTime> updateStream;
-  late final StreamSubscription subscription;
   late DateTime lastInteraction;
   bool flipper = false;
+
+  bool isActivated() {
+    return DateTime.now().difference(lastInteraction) < const Duration(seconds: 2);
+  }
 
   @override
   void initState() {
     super.initState();
-    ac = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
     lastInteraction = DateTime.now();
-    updateStream = Stream.periodic(const Duration(milliseconds: 500), (_) => DateTime.now());
 
-    ac.addListener(() {
-      widget.shady.setUniform('intensity', ac.value);
-    });
-
-    subscription = updateStream.listen((dt) {
-      if (dt.difference(lastInteraction) > const Duration(seconds: 4) && ac.value > .5) {
-        ac.reverse();
-      }
+    widget.shady.setTransformer<double>('intensity', (previousValue, delta) {
+      return isActivated()
+          ? min(previousValue + 0.02 + (previousValue * 0.05), 1)
+          : max(previousValue - (previousValue * 0.05), 0);
     });
   }
 
   void onInteraction(Vector2 _) {
-    ac.forward();
     lastInteraction = DateTime.now();
   }
 
   @override
   void dispose() {
-    ac.dispose();
-    subscription.cancel();
+    widget.shady.clearTransformer<double>('intensity');
+    widget.shady.setUniform<double>('intensity', 0);
     super.dispose();
   }
 
@@ -124,25 +120,9 @@ class _ShadyInteractivesState extends State<ShadyInteractives> {
           Positioned(
             bottom: 40,
             right: 40,
-            child: FilledButton.icon(
-              label: const Text(
-                'N E X T',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w200,
-                ),
-              ),
-              onPressed: _nextShader,
-              style: const ButtonStyle(
-                side: MaterialStatePropertyAll(BorderSide(color: Colors.white54)),
-                padding: MaterialStatePropertyAll(EdgeInsets.all(10)),
-                backgroundColor: MaterialStatePropertyAll(Colors.black45),
-                foregroundColor: MaterialStatePropertyAll(Colors.black45),
-              ),
-              icon: const Icon(
-                Icons.arrow_right_alt_sharp,
-                color: Colors.white,
-              ),
+            child: ShadyButton(
+              onTap: _nextShader,
+              text: 'NEXT',
             ),
           ),
         ],
