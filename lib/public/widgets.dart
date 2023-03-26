@@ -1,8 +1,6 @@
 part of '../shady.dart';
 
 /// A widget that continuously draws a Shady shader.
-///
-/// The [shader] argument is typically a [ShaderController] retrieved by calling [Shady.get].
 class ShadyCanvas extends StatefulWidget {
   final Shady _shady;
 
@@ -17,16 +15,36 @@ class ShadyCanvas extends StatefulWidget {
 }
 
 class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStateMixin {
+  bool _reffed = false;
+  CustomPainter painter = _defaultPainter;
+
   @override
   void initState() {
     super.initState();
+
+    if (!widget._shady.ready) {
+      widget._shady.load(context).then((_) => _startShady());
+    } else {
+      _startShady();
+    }
+  }
+
+  void _startShady() {
     widget._shady.setRefs(1);
+    _reffed = true;
+
     widget._shady.update();
+    setState(() {
+      painter = widget._shady.painter;
+    });
   }
 
   @override
   void dispose() {
-    widget._shady.setRefs(-1);
+    if (_reffed) {
+      widget._shady.setRefs(-1);
+    }
+
     super.dispose();
   }
 

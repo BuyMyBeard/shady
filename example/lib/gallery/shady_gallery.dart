@@ -19,16 +19,12 @@ class _ShadyGalleryState extends State<ShadyGallery> {
   @override
   initState() {
     super.initState();
-    loadShaders();
-  }
 
-  Future<void> loadShaders() async {
     for (var shady in galleryShaders) {
-      await shady.load(context);
       _shadies.add(shady);
     }
 
-    setState(() => _shady = _shadies.first);
+    _shady = _shadies.first;
   }
 
   void _nextShader() {

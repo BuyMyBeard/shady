@@ -14,6 +14,12 @@ class ShadyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    if (!_shady.ready) {
+      canvas.drawRect(rect, Paint());
+      return;
+    }
+
     if (size != _lastSize) {
       _lastSize = size;
       for (final uniform in _shady._uniforms.values) {
@@ -23,7 +29,7 @@ class ShadyPainter extends CustomPainter {
       }
     }
 
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    _shady.flush();
     canvas.drawRect(rect, _paint);
   }
 

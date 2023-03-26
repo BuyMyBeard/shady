@@ -2,16 +2,21 @@ library shady;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
+import 'dart:ui' hide Color;
+import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart' hide Image;
-import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math.dart' hide Colors;
 
 part 'public/descriptors.dart';
 part 'public/widgets.dart';
 part 'internal/default_image.dart';
 part 'internal/uniforms.dart';
 part 'internal/painter.dart';
+part 'internal/default_painter.dart';
+
+final _shaderCache = <String, FragmentShader>{};
+Image? _defaultImage;
+CustomPainter _defaultPainter = DefaultPainter();
 
 /// Transformer function that generates a new value
 /// based on the [previousValue] one and a [delta] duration.
@@ -34,12 +39,15 @@ class Shady {
   Paint _paint = Paint();
   Paint? get paint => _paint;
 
-  CustomPainter? _painter;
-  CustomPainter? get painter => _painter;
+  CustomPainter _painter = _defaultPainter;
+  CustomPainter get painter => _painter;
 
   var _updateQueued = false;
-  var _ready = false;
+  var _readying = false;
   var _refs = 0;
+
+  var _ready = false;
+  bool get ready => _ready;
 
   /// Creates a new [Shady] instance.
   ///
@@ -83,14 +91,32 @@ class Shady {
   /// [context] is used for [AssetBundle] look-ups, so
   /// this can be called high up in an app's widget tree.
   Future<void> load(BuildContext context) async {
-    if (_ready == true) return;
+    if (_ready || _readying) return;
+    _readying = true;
 
     final assetBundle = DefaultAssetBundle.of(context);
-    final defaultImage = await getDefaultImage();
-    final program = await FragmentProgram.fromAsset(_assetName);
-    _shader = program.fragmentShader();
 
-    var index = 0;
+    _defaultImage ??= await getDefaultImage();
+    if (!_shaderCache.containsKey(_assetName)) {
+      final program = await FragmentProgram.fromAsset(_assetName);
+      _shaderCache[_assetName] = program.fragmentShader();
+    }
+
+    _shader = _shaderCache[_assetName];
+
+    _initializeUniforms();
+    _initializeSamplers(assetBundle);
+
+    _readying = false;
+    _ready = true;
+
+    flush();
+
+    _paint = Paint()..shader = _shader!;
+    _painter = ShadyPainter(this);
+  }
+
+  void _initializeUniforms() {
     for (final uniformDescription in (_uniformDescriptions)) {
       if (uniformDescription is UniformValue<double>) {
         _uniforms[uniformDescription.key] = UniformFloatInstance(uniformDescription);
@@ -108,25 +134,16 @@ class Shady {
       }
 
       var instance = _uniforms[uniformDescription.key]!;
-      var startIndex = index;
-      index = instance.apply(_shader!, index);
-      instance.notifier.addListener(() => instance.apply(_shader!, startIndex));
+      instance.notifier.addListener(update);
     }
+  }
 
-    index = 0;
+  void _initializeSamplers(AssetBundle assetBundle) {
     for (final textureDescription in _samplerDescriptions) {
-      var scopeIndex = index;
-
-      final instance = TextureInstance(assetBundle, textureDescription, defaultImage);
+      final instance = TextureInstance(assetBundle, textureDescription, _defaultImage!);
       _samplers[instance.key] = instance;
-
-      index = instance.apply(_shader!, scopeIndex);
-      instance.notifier.addListener(() => instance.apply(_shader!, scopeIndex));
+      instance.notifier.addListener(update);
     }
-
-    _paint = Paint()..shader = _shader!;
-    _painter = ShadyPainter(this);
-    _ready = true;
   }
 
   /// Sets the [asset] image to be used by the texture sampler with key [samplerKey].
@@ -215,11 +232,28 @@ class Shady {
     _updateQueued = true;
   }
 
+  /// Flushes this instances values to the (possibly shared) shader program.
+  /// Primarily called by the [ShadyPainter] before drawing.
+  ///
+  /// Do not use unless you know what you are doing.
+  void flush() {
+    assert(_ready, 'flush was called before Shady instance was .load()\'ed');
+
+    var i = 0;
+    for (final uniform in _uniforms.values) {
+      i = uniform.apply(_shader!, i);
+    }
+
+    i = 0;
+    for (final sampler in _samplers.values) {
+      i = sampler.apply(_shader!, i);
+    }
+  }
+
   /// Adds [refModifier] to the internal ref counter.
   ///
   /// Do not use unless you know what you are doing.
   void setRefs(int refModifier) {
-    assert(_ready, 'setRefs was called before Shady instance was .load()\'ed');
     _refs += refModifier;
   }
 
