@@ -16,7 +16,7 @@ class ShadyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 180,
+      width: 120,
       child: FilledButton.icon(
       label: Text(
         text,
@@ -35,6 +35,7 @@ class ShadyButton extends StatelessWidget {
       icon: Icon(
         icon ?? Icons.arrow_right_alt_sharp,
         color: Colors.white,
+        size: 14,
       ),
       ),
     );
