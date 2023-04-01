@@ -31,9 +31,9 @@ class _MyAppState extends State<MyApp> {
     );
 
     if (screen == 0) {
-      child = const ShadyGallery();
+      child = ShadyGallery(onBack: () => setState(() => screen = null));
     } else if (screen == 1) {
-      child = const ShadyInteractives();
+      child = ShadyInteractives(onBack: () => setState(() => screen = null));
     }
 
     return MaterialApp(

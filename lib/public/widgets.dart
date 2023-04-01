@@ -3,10 +3,12 @@ part of '../shady.dart';
 /// A widget that continuously draws a Shady shader.
 class ShadyCanvas extends StatefulWidget {
   final Shady _shady;
+  final VoidCallback? onLoaded;
 
   const ShadyCanvas(
     shady, {
     Key? key,
+    this.onLoaded,
   })  : _shady = shady,
         super(key: key);
 
@@ -37,6 +39,10 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
     setState(() {
       painter = widget._shady.painter;
     });
+
+    if (widget.onLoaded != null) {
+      widget.onLoaded!();
+    }
   }
 
   @override
@@ -77,22 +83,24 @@ class ShadyInteractive extends StatelessWidget {
   final Shady shady;
   final String? uniformVec2Key;
   final void Function(Vector2 offset)? onInteraction;
+  final VoidCallback? onLoaded;
 
-  ShadyInteractive(
+  const ShadyInteractive(
     this.shady, {
     Key? key,
     this.uniformVec2Key,
     this.onInteraction,
-  }) : super(key: key) {
-    if (uniformVec2Key != null) {
-      shady.getUniform<Vector2>(uniformVec2Key!);
-    }
-  }
+    this.onLoaded,
+  }) : super(key: key);
 
   void _handleInteraction(
     BoxConstraints constraints,
     Offset position,
   ) {
+    if (!shady.ready) {
+      return;
+    }
+
     Vector2 vec2 = Vector2(
       position.dx / constraints.maxWidth,
       position.dy / constraints.maxHeight,
@@ -118,7 +126,7 @@ class ShadyInteractive extends StatelessWidget {
         onTapDown: (event) => _handleInteraction(constraints, event.localPosition),
         onPanStart: (event) => _handleInteraction(constraints, event.localPosition),
         onPanUpdate: (event) => _handleInteraction(constraints, event.localPosition),
-        child: ShadyCanvas(shady),
+        child: ShadyCanvas(shady, onLoaded: onLoaded),
       );
     });
   }
@@ -133,12 +141,16 @@ class ShadyStack extends StatelessWidget {
   final Widget? child;
   final Shady shady;
   final Shady? topShady;
+  final VoidCallback? onLoaded;
+  final VoidCallback? onTopLoaded;
 
   const ShadyStack({
     Key? key,
     required this.shady,
     this.topShady,
     this.child,
+    this.onLoaded,
+    this.onTopLoaded,
   }) : super(key: key);
 
   @override
@@ -146,12 +158,12 @@ class ShadyStack extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: ShadyCanvas(shady),
+          child: ShadyCanvas(shady, onLoaded: onLoaded),
         ),
         if (child != null) child!,
         if (topShady != null)
           Positioned.fill(
-            child: ShadyCanvas(topShady),
+            child: ShadyCanvas(topShady, onLoaded: onTopLoaded),
           ),
       ],
     );
