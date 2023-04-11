@@ -110,7 +110,7 @@ uniform sampler2D iChannel1;
 uniform sampler2D iChannel2;
 ////////////// Shadertoy BEGIN
 
-[ Paste your Shadertoy code here ]
+[ Paste your Shadertoy shader code here ]
 
 ////////////// Shadertoy END
 void main(void) { mainImage(fragColor, FlutterFragCoord()); }

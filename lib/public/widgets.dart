@@ -1,14 +1,21 @@
 part of '../shady.dart';
 
 /// A widget that continuously draws a Shady shader.
+///
+/// The optional [onLoaded] callback is called when the Shady instance has loaded
+/// and is ready to be modified.
+///
+/// If [assetBundle] is omitted, the current [DefaultAssetBundle] will be used.
 class ShadyCanvas extends StatefulWidget {
   final Shady _shady;
   final VoidCallback? onLoaded;
+  final AssetBundle? assetBundle;
 
   const ShadyCanvas(
     shady, {
     Key? key,
     this.onLoaded,
+    this.assetBundle,
   })  : _shady = shady,
         super(key: key);
 
@@ -25,7 +32,9 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
     super.initState();
 
     if (!widget._shady.ready) {
-      widget._shady.load(context).then((_) => _startShady());
+      widget._shady
+          .load(widget.assetBundle ?? DefaultAssetBundle.of(context))
+          .then((_) => _startShady());
     } else {
       _startShady();
     }
@@ -74,11 +83,16 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
 /// The [UniformVec2] with key [uniformVec2Key] will be
 /// updated with the normalized coordinate of user interactions.
 ///
-/// If the [Shady] instance has been flagged as `shaderToy`, the `iMouse`
+/// If the provided [Shady] instance has been flagged as `shaderToy`, the `iMouse`
 /// uniform will be populated instead.
 ///
 /// The optional [onInteraction] is called when an interaction happens,
 /// with the same normalized coordinates.
+///
+/// The optional [onLoaded] callback is called when the Shady instance has loaded
+/// and is ready to be modified.
+///
+/// If [assetBundle] is omitted, the current [DefaultAssetBundle] will be used.
 class ShadyInteractive extends StatelessWidget {
   final Shady shady;
   final String? uniformVec2Key;
@@ -134,15 +148,21 @@ class ShadyInteractive extends StatelessWidget {
 
 /// A convenience widget wrapping a [ShadyCanvas] in a [Stack].
 ///
-/// The [child] is drawn on top, and can be wrapped in a [Positioned] to control layout.
-/// The [shader] is typically a [ShaderController] retrieved by calling [Shady.get].
+/// The [child] can be wrapped in a [Positioned] to control layout.
+///
 /// If supplied, the [topShady] is drawn on top.
+///
+/// The optional [onLoaded] and [onTopLoaded] callbacks are called when the
+/// corresponding Shady instances has loaded and is ready to be modified.
+///
+/// If [assetBundle] is omitted, the current [DefaultAssetBundle] will be used.
 class ShadyStack extends StatelessWidget {
   final Widget? child;
   final Shady shady;
   final Shady? topShady;
   final VoidCallback? onLoaded;
   final VoidCallback? onTopLoaded;
+  final AssetBundle? assetBundle;
 
   const ShadyStack({
     Key? key,
@@ -151,6 +171,7 @@ class ShadyStack extends StatelessWidget {
     this.child,
     this.onLoaded,
     this.onTopLoaded,
+    this.assetBundle,
   }) : super(key: key);
 
   @override

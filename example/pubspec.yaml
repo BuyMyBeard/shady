@@ -31,5 +31,6 @@ flutter:
     - "assets/shaders/st9.frag"
     - "assets/shaders/it0.frag"
     - "assets/shaders/it1.frag"
+    - "assets/shaders/fx1.frag"
   assets:
     - "assets/textures/"

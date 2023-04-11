@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:ui' hide Color;
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;
 
 part 'public/descriptors.dart';
@@ -88,13 +89,12 @@ class Shady {
   /// Parses the previously provided descriptions and
   /// initializes the [FragmentProgram].
   ///
-  /// [context] is used for [AssetBundle] look-ups, so
-  /// this can be called high up in an app's widget tree.
-  Future<void> load(BuildContext context) async {
+  /// Providing an [assetBundle] is optional. If omitted, [rootBundle] will be used.
+  Future<void> load([ AssetBundle? assetBundle ]) async {
     if (_ready || _readying) return;
     _readying = true;
 
-    final assetBundle = DefaultAssetBundle.of(context);
+    final _assetBundle = assetBundle ?? rootBundle;
 
     _defaultImage ??= await getDefaultImage();
     if (!_shaderCache.containsKey(_assetName)) {
@@ -105,7 +105,7 @@ class Shady {
     _shader = _shaderCache[_assetName];
 
     _initializeUniforms();
-    _initializeSamplers(assetBundle);
+    _initializeSamplers(_assetBundle);
 
     _readying = false;
     _ready = true;
@@ -148,7 +148,7 @@ class Shady {
 
   /// Sets the [asset] image to be used by the texture sampler with key [samplerKey].
   void setTexture(String samplerKey, String assetKey) {
-    assert(_ready, 'setTexture was called before Shady instance was .load()\'ed');
+    assert(_ready, 'setTexture was called before Shady instance was loaded');
 
     try {
       final sampler = _samplers[samplerKey];
@@ -158,21 +158,21 @@ class Shady {
     }
   }
 
-  /// Retrieve the image used by the texture with key [samplerKey].
+  /// Retrieve the image used by the sampler with key [samplerKey].
   Image? getImage(String samplerKey) {
-    assert(_ready, 'getImage was called before Shady instance was .load()\'ed');
+    assert(_ready, 'getImage was called before Shady instance was loaded');
 
     try {
       final texture = _samplers[samplerKey];
       return texture!.notifier.value;
     } catch (e) {
-      throw Exception('Texture with key "$samplerKey" not found.');
+      throw Exception('Sampler with key "$samplerKey" not found.');
     }
   }
 
   /// Immediately set the uniform value of the uniform with key [uniformKey].
   void setUniform<T>(String uniformKey, T value) {
-    assert(_ready, 'setUniform was called before Shady instance was .load()\'ed');
+    assert(_ready, 'setUniform was called before Shady instance was loaded');
 
     try {
       final uniform = _uniforms[uniformKey] as UniformInstance<T>;
@@ -184,7 +184,7 @@ class Shady {
 
   /// Sets the [transformer] to be used by the uniform with key [uniformKey].
   void setTransformer<T>(String uniformKey, UniformTransformer<T> transformer) {
-    assert(_ready, 'setTransformer was called before Shady instance was .load()\'ed');
+    assert(_ready, 'setTransformer was called before Shady instance was loaded');
 
     try {
       final uniform = _uniforms[uniformKey] as UniformInstance<T>;
@@ -196,7 +196,7 @@ class Shady {
 
   /// Clears the [transformer] for [uniformKey].
   void clearTransformer<T>(String uniformKey) {
-    assert(_ready, 'clearTransformer was called before Shady instance was .load()\'ed');
+    assert(_ready, 'clearTransformer was called before Shady instace was loaded');
 
     try {
       final uniform = (_uniforms[uniformKey] as UniformInstance<T>);
@@ -208,7 +208,7 @@ class Shady {
 
   /// Retrieve the uniform value of the uniform with key [uniformKey].
   T getUniform<T>(String uniformKey) {
-    assert(_ready, 'getUniform was called before Shady instance was .load()\'ed');
+    assert(_ready, 'getUniform was called before Shady instance was loaded');
     try {
       final uniform = _uniforms[uniformKey] as UniformInstance<T>;
       return uniform.notifier.value;
@@ -225,7 +225,7 @@ class Shady {
   /// This call is idempotent, and will not trigger extraneous
   /// updates, loop triggers or repaints.
   void update() {
-    assert(_ready, 'update was called before Shady instance was .load()\'ed');
+    assert(_ready, 'update was called before Shady instance was loaded');
 
     if (_updateQueued) return;
     SchedulerBinding.instance.addPostFrameCallback(_internalUpdate);
@@ -237,7 +237,7 @@ class Shady {
   ///
   /// Do not use unless you know what you are doing.
   void flush() {
-    assert(_ready, 'flush was called before Shady instance was .load()\'ed');
+    assert(_ready, 'flush was called before Shady instance was loaded');
 
     var i = 0;
     for (final uniform in _uniforms.values) {
@@ -258,7 +258,7 @@ class Shady {
   }
 
   void _internalUpdate(Duration ts) {
-    assert(_ready, '_internalUpdate was called before Shady instance was .load()\'ed');
+    assert(_ready, '_internalUpdate was called before Shady instane was loaded');
 
     for (var x in _uniforms.values) {
       x.update(ts);
