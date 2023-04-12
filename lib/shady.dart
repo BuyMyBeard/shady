@@ -42,7 +42,7 @@ class Shady {
   final String _assetName;
   String get assetName => _assetName;
 
-  final bool _shaderToy;
+  BlendMode _blendMode = BlendMode.srcOver;
   final _uniformDescriptions = <UniformValue>[];
   final _samplerDescriptions = <TextureSampler>[];
   final _uniforms = <String, UniformInstance>{};
@@ -52,13 +52,15 @@ class Shady {
   FragmentShader? _shader;
 
   Paint _paint = Paint();
-  Paint? get paint => _paint;
+  Paint get paint => _paint;
 
   CustomPainter _painter = _defaultPainter;
   CustomPainter get painter => _painter;
 
   var _updateQueued = false;
   var _readying = false;
+
+  final bool _shaderToy;
 
   var _ready = false;
   bool get ready => _ready;
@@ -82,9 +84,11 @@ class Shady {
     required String assetName,
     List<TextureSampler>? samplers,
     List<UniformValue>? uniforms,
+    BlendMode? blendMode,
     bool? shaderToy,
   })  : _assetName = assetName,
-        _shaderToy = shaderToy ?? false {
+        _shaderToy = shaderToy ?? false,
+        _blendMode = blendMode ?? BlendMode.srcOver {
     _samplerDescriptions.addAll(samplers ?? <TextureSampler>[]);
     _uniformDescriptions.addAll(uniforms ?? <UniformValue>[]);
   }
@@ -118,7 +122,10 @@ class Shady {
 
     flush();
 
-    _paint = Paint()..shader = _shader!;
+    _paint = Paint()
+      ..shader = _shader!
+      ..blendMode = _blendMode;
+
     _painter = ShadyPainter(this);
   }
 
@@ -129,6 +136,7 @@ class Shady {
       samplers: _samplerDescriptions,
       shaderToy: _shaderToy,
       uniforms: _uniformDescriptions,
+      blendMode: _blendMode,
     );
   }
 
@@ -188,6 +196,7 @@ class Shady {
   void setBlendMode(BlendMode blendMode) {
     assert(_ready, 'setBlendMode was called before Shady instance was loaded');
 
+    _blendMode = blendMode;
     _paint.blendMode = blendMode;
   }
 

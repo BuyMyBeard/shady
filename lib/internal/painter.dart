@@ -5,11 +5,9 @@ part of '../shady.dart';
 class ShadyPainter extends CustomPainter {
   Size _lastSize = Size.zero;
   final Shady _shady;
-  final Paint _paint;
 
   ShadyPainter(Shady shady)
       : _shady = shady,
-        _paint = shady._paint,
         super(repaint: shady._notifier);
 
   @override
@@ -31,7 +29,7 @@ class ShadyPainter extends CustomPainter {
 
     _shady.update();
     _shady.flush();
-    canvas.drawRect(rect, _paint);
+    canvas.drawRect(rect, _shady.paint);
   }
 
   @override
