@@ -24,7 +24,6 @@ class ShadyCanvas extends StatefulWidget {
 }
 
 class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStateMixin {
-  bool _reffed = false;
   CustomPainter painter = _defaultPainter;
 
   @override
@@ -41,10 +40,6 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
   }
 
   void _startShady() {
-    widget._shady.setRefs(1);
-    _reffed = true;
-
-    widget._shady.update();
     setState(() {
       painter = widget._shady.painter;
     });
@@ -52,15 +47,6 @@ class _ShadyCanvasState extends State<ShadyCanvas> with SingleTickerProviderStat
     if (widget.onLoaded != null) {
       widget.onLoaded!();
     }
-  }
-
-  @override
-  void dispose() {
-    if (_reffed) {
-      widget._shady.setRefs(-1);
-    }
-
-    super.dispose();
   }
 
   @override

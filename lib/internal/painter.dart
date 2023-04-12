@@ -3,7 +3,7 @@ part of '../shady.dart';
 /// A painter that draws a Shady shader.
 @protected
 class ShadyPainter extends CustomPainter {
-  Size? _lastSize;
+  Size _lastSize = Size.zero;
   final Shady _shady;
   final Paint _paint;
 
@@ -29,6 +29,7 @@ class ShadyPainter extends CustomPainter {
       }
     }
 
+    _shady.update();
     _shady.flush();
     canvas.drawRect(rect, _paint);
   }

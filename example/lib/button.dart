@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class ShadyButton extends StatelessWidget {
   final String text;
   final IconData? icon;
@@ -16,7 +15,7 @@ class ShadyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 120,
+      width: 160,
       child: FilledButton.icon(
       label: Text(
         text,

@@ -19,6 +19,20 @@ final _shaderCache = <String, FragmentShader>{};
 Image? _defaultImage;
 CustomPainter _defaultPainter = DefaultPainter();
 
+final _shaderToyUniforms = [
+  UniformVec3(key: 'iResolution', transformer: UniformVec3.resolution),
+  UniformFloat(key: 'iTime', transformer: UniformFloat.secondsPassed),
+  UniformFloat(key: 'iTimeDelta', transformer: UniformFloat.frameDelta),
+  UniformFloat(key: 'iFrameRate', transformer: UniformFloat.frameRate),
+  UniformVec4(key: 'iMouse'),
+];
+
+final _shaderToySamplers = [
+  TextureSampler(key: 'iChannel0'),
+  TextureSampler(key: 'iChannel1'),
+  TextureSampler(key: 'iChannel2')
+];
+
 /// Transformer function that generates a new value
 /// based on the [previousValue] one and a [delta] duration.
 typedef UniformTransformer<T> = T Function(T previousValue, Duration delta);
@@ -45,7 +59,6 @@ class Shady {
 
   var _updateQueued = false;
   var _readying = false;
-  var _refs = 0;
 
   var _ready = false;
   bool get ready => _ready;
@@ -54,11 +67,17 @@ class Shady {
   ///
   /// [Shady] facilitates interaction with the provided shader
   /// program at [assetName], according to the provided
-  /// [samplers] and [uniforms]. [Shady.load] must be called before
-  /// the [Shady] instance is used by any widget.
+  /// [samplers] and [uniforms].
   ///
-  /// Once loaded, a [Shady] instance can be reused (though the uniform
-  /// values will be the same for all references).
+  /// If you are painting the shader without using the widgets
+  /// provided by the shady library, you must call [load]
+  /// before use.
+  ///
+  /// Once loaded, a [Shady] instance can be reused (although
+  /// the uniform values will be shared).
+  ///
+  /// To get a fresh copy with its own uniform values, you can call the
+  /// [copy] method of an existing instance.
   Shady({
     required String assetName,
     List<TextureSampler>? samplers,
@@ -66,35 +85,22 @@ class Shady {
     bool? shaderToy,
   })  : _assetName = assetName,
         _shaderToy = shaderToy ?? false {
-    if (_shaderToy) {
-      _uniformDescriptions.addAll([
-        UniformVec3(key: 'iResolution', transformer: UniformVec3.resolution),
-        UniformFloat(key: 'iTime', transformer: UniformFloat.secondsPassed),
-        UniformFloat(key: 'iTimeDelta', transformer: UniformFloat.frameDelta),
-        UniformFloat(key: 'iFrameRate', transformer: UniformFloat.frameRate),
-        UniformVec4(key: 'iMouse'),
-      ]);
-
-      _samplerDescriptions.addAll([
-        TextureSampler(key: 'iChannel0'),
-        TextureSampler(key: 'iChannel1'),
-        TextureSampler(key: 'iChannel2')
-      ]);
-    }
-
     _samplerDescriptions.addAll(samplers ?? <TextureSampler>[]);
     _uniformDescriptions.addAll(uniforms ?? <UniformValue>[]);
   }
 
-  /// Parses the previously provided descriptions and
-  /// initializes the [FragmentProgram].
+  /// Parses the previously provided descriptions and initializes the
+  /// [FragmentProgram].
+  ///
+  /// This is handled automatically by the widgets provided by the shady library.
+  /// Calling it is only required if you are using this [Shady] for painting manually.
   ///
   /// Providing an [assetBundle] is optional. If omitted, [rootBundle] will be used.
-  Future<void> load([ AssetBundle? assetBundle ]) async {
+  Future<void> load([AssetBundle? assetBundle]) async {
     if (_ready || _readying) return;
     _readying = true;
 
-    final _assetBundle = assetBundle ?? rootBundle;
+    final actualAssetBundle = assetBundle ?? rootBundle;
 
     _defaultImage ??= await getDefaultImage();
     if (!_shaderCache.containsKey(_assetName)) {
@@ -105,7 +111,7 @@ class Shady {
     _shader = _shaderCache[_assetName];
 
     _initializeUniforms();
-    _initializeSamplers(_assetBundle);
+    _initializeSamplers(actualAssetBundle);
 
     _readying = false;
     _ready = true;
@@ -116,8 +122,23 @@ class Shady {
     _painter = ShadyPainter(this);
   }
 
+  /// Constructs a copy of this [Shady] instance.
+  Shady copy() {
+    return Shady(
+      assetName: _assetName,
+      samplers: _samplerDescriptions,
+      shaderToy: _shaderToy,
+      uniforms: _uniformDescriptions,
+    );
+  }
+
   void _initializeUniforms() {
-    for (final uniformDescription in (_uniformDescriptions)) {
+    final expandedUniformDescriptions = [
+      ...(_shaderToy ? _shaderToyUniforms : []),
+      ..._uniformDescriptions,
+    ];
+
+    for (final uniformDescription in (expandedUniformDescriptions)) {
       if (uniformDescription is UniformValue<double>) {
         _uniforms[uniformDescription.key] = UniformFloatInstance(uniformDescription);
       } else if (uniformDescription is UniformValue<Vector2>) {
@@ -139,7 +160,12 @@ class Shady {
   }
 
   void _initializeSamplers(AssetBundle assetBundle) {
-    for (final textureDescription in _samplerDescriptions) {
+    final expandedSamplerDescriptions = <TextureSampler>[
+      ...(_shaderToy ? _shaderToySamplers : []),
+      ..._samplerDescriptions,
+    ];
+
+    for (final textureDescription in expandedSamplerDescriptions) {
       final instance = TextureInstance(assetBundle, textureDescription, _defaultImage!);
       _samplers[instance.key] = instance;
       instance.notifier.addListener(update);
@@ -156,6 +182,13 @@ class Shady {
     } catch (e) {
       throw Exception('Texture sampler with key "$samplerKey" not found.');
     }
+  }
+
+  /// Sets the [blendMode] used for painting this shader.
+  void setBlendMode(BlendMode blendMode) {
+    assert(_ready, 'setBlendMode was called before Shady instance was loaded');
+
+    _paint.blendMode = blendMode;
   }
 
   /// Retrieve the image used by the sampler with key [samplerKey].
@@ -250,25 +283,14 @@ class Shady {
     }
   }
 
-  /// Adds [refModifier] to the internal ref counter.
-  ///
-  /// Do not use unless you know what you are doing.
-  void setRefs(int refModifier) {
-    _refs += refModifier;
-  }
-
   void _internalUpdate(Duration ts) {
     assert(_ready, '_internalUpdate was called before Shady instane was loaded');
 
     for (var x in _uniforms.values) {
       x.update(ts);
-      _notifier.value = !_notifier.value;
     }
 
-    if (_refs > 0) {
-      SchedulerBinding.instance.addPostFrameCallback(_internalUpdate);
-    } else {
-      _updateQueued = false;
-    }
+    _updateQueued = false;
+    _notifier.value = !_notifier.value;
   }
 }
