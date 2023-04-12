@@ -36,11 +36,7 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
 
     [...]
     ```
-2. When appropriate, load the shader program.
-    ```
-    await shady.load();
-    ```
-3. Use one of the supplied widgets where you want to display your shader.
+2. Use one of the supplied widgets where you want to display your shader.
     ```
     SizedBox(
       width: 200,
@@ -48,10 +44,11 @@ Use Flutter 3.7 or later, and follow [this guide](https://docs.flutter.dev/devel
       child: ShadyCanvas(shady),
     ),
     ```
-4. Modify your shader parameters by using your `Shady` instance
+3. Modify your shader parameters by using your `Shady` instance at runtime
     ```
     shady.setUniform<double>('uniformOne', 0.4);
     shady.setTexture('textureOne', 'assets/texture2.png');
+    shady.setBlendMode(BlendMode.modulate);
     ```
 
 ## Other features
@@ -148,5 +145,8 @@ ShadyInteractive(
 A Shady that has been flagged as `shaderToy` will have the `iMouse` uniform automatically wired.
 
 ## Additional information
+
+If you are using your shader outside of the supplied widgets, you'll need to call the `.load()` method
+on the Shady instance before usage.
 
 The `example` app has a gallery of various shaders. Have a look for inspiration and such.

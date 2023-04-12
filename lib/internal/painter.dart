@@ -29,6 +29,7 @@ class ShadyPainter extends CustomPainter {
 
     _shady.update();
     _shady.flush();
+
     canvas.drawRect(rect, _shady.paint);
   }
 
