@@ -121,7 +121,7 @@ Then, when creating your `Shady` instance, flag it using the parameter `shaderTo
 
 ```
 Shady(
-  assetName: 'assets/shaders/my_shadertoy_shader.frag'),
+  assetName: 'assets/shaders/my_shadertoy_shader.frag',
   shaderToy: true,
 )
 ```
