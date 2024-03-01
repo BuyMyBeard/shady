@@ -1,6 +1,7 @@
 # Shaderize your flutters.
 
  Fork from the [shady package](https://pub.dev/packages/shady).
+ 
  I plan on keeping this up to date and republish it to Pub.dev, but for now, it will be hosted on GitHub
 
 ## Getting started
