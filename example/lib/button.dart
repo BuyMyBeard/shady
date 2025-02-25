@@ -26,10 +26,10 @@ class ShadyButton extends StatelessWidget {
       ),
       onPressed: onTap,
       style: const ButtonStyle(
-        side: MaterialStatePropertyAll(BorderSide(color: Colors.white54)),
-        padding: MaterialStatePropertyAll(EdgeInsets.all(10)),
-        backgroundColor: MaterialStatePropertyAll(Colors.black45),
-        foregroundColor: MaterialStatePropertyAll(Colors.black45),
+        side: WidgetStatePropertyAll(BorderSide(color: Colors.white54)),
+        padding: WidgetStatePropertyAll(EdgeInsets.all(10)),
+        backgroundColor: WidgetStatePropertyAll(Colors.black45),
+        foregroundColor: WidgetStatePropertyAll(Colors.black45),
       ),
       icon: Icon(
         icon ?? Icons.arrow_right_alt_sharp,

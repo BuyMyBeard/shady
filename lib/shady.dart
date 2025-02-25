@@ -19,14 +19,6 @@ final _shaderCache = <String, FragmentShader>{};
 Image? _defaultImage;
 CustomPainter _defaultPainter = DefaultPainter();
 
-final _shaderToyUniforms = [
-  UniformVec3(key: 'iResolution', transformer: UniformVec3.resolution),
-  UniformFloat(key: 'iTime', transformer: UniformFloat.secondsPassed),
-  UniformFloat(key: 'iTimeDelta', transformer: UniformFloat.frameDelta),
-  UniformFloat(key: 'iFrameRate', transformer: UniformFloat.frameRate),
-  UniformVec4(key: 'iMouse'),
-];
-
 final _shaderToySamplers = [
   TextureSampler(key: 'iChannel0'),
   TextureSampler(key: 'iChannel1'),
@@ -37,12 +29,58 @@ final _shaderToySamplers = [
 /// based on the [previousValue] one and a [delta] duration.
 typedef UniformTransformer<T> = T Function(T previousValue, Duration delta);
 
+class ShaderToyInputs {
+
+  const ShaderToyInputs({
+    this.iResolution = false,
+    this.iTime = false,
+    this.iTimeDelta = false,
+    this.iFrameRate = false,
+    this.iMouse = false,
+    this.iChannel0,
+    this.iChannel1,
+    this.iChannel2,
+  });
+
+  final bool iResolution;
+  final bool iTime;
+  final bool iTimeDelta;
+  final bool iFrameRate;
+  final bool iMouse;
+  final String? iChannel0;
+  final String? iChannel1;
+  final String? iChannel2;
+
+  List<UniformValue> get _uniforms {
+    return [
+      if (iResolution)
+        UniformVec3(key: 'iResolution', transformer: UniformVec3.resolution),
+      if (iTime)
+        UniformFloat(key: 'iTime', transformer: UniformFloat.secondsPassed),
+      if (iTimeDelta)
+        UniformFloat(key: 'iTimeDelta', transformer: UniformFloat.frameDelta),
+      if (iFrameRate)
+        UniformFloat(key: 'iFrameRate', transformer: UniformFloat.frameRate),
+    ];
+  }
+
+  List<TextureSampler> get _samplers {
+    return [
+      if (iChannel0 != null)
+        TextureSampler(key: 'iChannel0', asset: iChannel0),
+      if (iChannel1 != null)
+        TextureSampler(key: 'iChannel1', asset: iChannel1),
+      if (iChannel2 != null)
+        TextureSampler(key: 'iChannel2', asset: iChannel2),
+    ];
+  }
+}
+
 /// A mapping of user-created shaders and ways to manipulate them.
 class Shady {
-  final String _assetName;
-  String get assetName => _assetName;
+  final String assetName;
 
-  BlendMode _blendMode = BlendMode.srcOver;
+  final BlendMode blendMode;
   final _uniformDescriptions = <UniformValue>[];
   final _samplerDescriptions = <TextureSampler>[];
   final _uniforms = <String, UniformInstance>{};
@@ -60,7 +98,7 @@ class Shady {
   var _updateQueued = false;
   var _readying = false;
 
-  final bool _shaderToy;
+  final ShaderToyInputs? shaderToyInputs;
 
   var _ready = false;
   bool get ready => _ready;
@@ -81,14 +119,12 @@ class Shady {
   /// To get a fresh copy with its own uniform values, you can call the
   /// [copy] method of an existing instance.
   Shady({
-    required String assetName,
+    required this.assetName,
     List<TextureSampler>? samplers,
     List<UniformValue>? uniforms,
-    BlendMode? blendMode,
-    bool? shaderToy,
-  })  : _assetName = assetName,
-        _shaderToy = shaderToy ?? false,
-        _blendMode = blendMode ?? BlendMode.srcOver {
+    this.blendMode = BlendMode.srcOver,
+    this.shaderToyInputs,
+  }) {
     _samplerDescriptions.addAll(samplers ?? <TextureSampler>[]);
     _uniformDescriptions.addAll(uniforms ?? <UniformValue>[]);
   }
@@ -107,12 +143,12 @@ class Shady {
     final actualAssetBundle = assetBundle ?? rootBundle;
 
     _defaultImage ??= await getDefaultImage();
-    if (!_shaderCache.containsKey(_assetName)) {
-      final program = await FragmentProgram.fromAsset(_assetName);
-      _shaderCache[_assetName] = program.fragmentShader();
+    if (!_shaderCache.containsKey(assetName)) {
+      final program = await FragmentProgram.fromAsset(assetName);
+      _shaderCache[assetName] = program.fragmentShader();
     }
 
-    _shader = _shaderCache[_assetName];
+    _shader = _shaderCache[assetName];
 
     _initializeUniforms();
     _initializeSamplers(actualAssetBundle);
@@ -124,7 +160,7 @@ class Shady {
 
     _paint = Paint()
       ..shader = _shader!
-      ..blendMode = _blendMode;
+      ..blendMode = blendMode;
 
     _painter = ShadyPainter(this);
   }
@@ -132,17 +168,17 @@ class Shady {
   /// Constructs a copy of this [Shady] instance.
   Shady copy() {
     return Shady(
-      assetName: _assetName,
+      assetName: assetName,
       samplers: _samplerDescriptions,
-      shaderToy: _shaderToy,
+      shaderToyInputs: shaderToyInputs,
       uniforms: _uniformDescriptions,
-      blendMode: _blendMode,
+      blendMode: blendMode,
     );
   }
 
   void _initializeUniforms() {
     final expandedUniformDescriptions = [
-      ...(_shaderToy ? _shaderToyUniforms : []),
+      ...(shaderToyInputs?._uniforms ?? []),
       ..._uniformDescriptions,
     ];
 
@@ -169,7 +205,7 @@ class Shady {
 
   void _initializeSamplers(AssetBundle assetBundle) {
     final expandedSamplerDescriptions = <TextureSampler>[
-      ...(_shaderToy ? _shaderToySamplers : []),
+      ...(shaderToyInputs?._samplers ?? []),
       ..._samplerDescriptions,
     ];
 
@@ -196,7 +232,7 @@ class Shady {
   void setBlendMode(BlendMode blendMode) {
     assert(_ready, 'setBlendMode was called before Shady instance was loaded');
 
-    _blendMode = blendMode;
+    blendMode = blendMode;
     _paint.blendMode = blendMode;
   }
 

@@ -106,7 +106,7 @@ class ShadyInteractive extends StatelessWidget {
       position.dy / constraints.maxHeight,
     );
 
-    if (shady._shaderToy) {
+    if (shady.shaderToyInputs?.iMouse ?? false) {
       shady.setUniform<Vector4>('iMouse', Vector4(vec2.x, vec2.y, 0, 0));
     } else if (uniformVec2Key != null) {
       shady.setUniform<Vector2>(uniformVec2Key!, vec2);

@@ -1,11 +1,11 @@
 name: shady
 description: Making it easier to work with GLSL shaders in Flutter.
-version: 2.1.0
+version: 3.0.0
 repository: https://bitbucket.org/Feenposhleen/shady
 
 environment:
-  sdk: '>=2.19.2 <3.0.0'
-  flutter: ">=3.7.0"
+  sdk: ^3.7.0
+  flutter: ^3.29.0
 
 dependencies:
   vector_math: ^2.1.4
@@ -16,5 +16,3 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-
-flutter:

@@ -1,7 +1,5 @@
 part of '../shady.dart';
 
-final _defaultPaint = Paint();
-
 /// A painter that draws a Shady shader.
 @protected
 class DefaultPainter extends CustomPainter {
